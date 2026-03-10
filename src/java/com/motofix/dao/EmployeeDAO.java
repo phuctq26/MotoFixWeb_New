@@ -39,7 +39,7 @@ public class EmployeeDAO extends DBContext {
         }
         Date hireDate = rs.getDate("HireDate");
         e.setHireDate(hireDate != null ? hireDate.toString() : "");
-        e.setActive(rs.getBoolean("Status"));
+        e.setActive("ACTIVE".equalsIgnoreCase(rs.getString("Status")));
         if (hasExtra) {
             try {
                 e.setFullName(rs.getString("FullName"));

@@ -55,13 +55,8 @@ public class AdminServiceController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/admin/services");
         } catch (Exception e) {
             e.printStackTrace();
-            request.setAttribute("error", "Lỗi xử lý dịch vụ: " + e.getMessage());
-            try {
-                List<Service> services = serviceDAO.listAll();
-                request.setAttribute("services", services);
-            } catch (SQLException ignored) {
-            }
-            request.getRequestDispatcher("/views/admin/services.jsp").forward(request, response);
+            request.getSession().setAttribute("error", "Lỗi xử lý dịch vụ: " + e.getMessage());
+            response.sendRedirect(request.getContextPath() + "/admin/services");
         }
     }
 }

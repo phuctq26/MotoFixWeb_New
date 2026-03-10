@@ -87,7 +87,7 @@ public class CustomerDAO extends DBContext {
             String email, String password, String address) throws SQLException {
         String hash = (password != null && !password.isEmpty())
                 ? PasswordUtil.hash(password)
-                : PasswordUtil.hash(username);
+                : PasswordUtil.hash("123");
 
         connection.setAutoCommit(false);
         try {

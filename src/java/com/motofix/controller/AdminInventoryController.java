@@ -63,13 +63,8 @@ public class AdminInventoryController extends HttpServlet {
             response.sendRedirect(request.getContextPath() + "/admin/inventory");
         } catch (Exception e) {
             e.printStackTrace();
-            request.setAttribute("error", "Lỗi xử lý phụ tùng: " + e.getMessage());
-            try {
-                List<Part> parts = partDAO.listAll();
-                request.setAttribute("parts", parts);
-            } catch (SQLException ignored) {
-            }
-            request.getRequestDispatcher("/views/admin/inventory.jsp").forward(request, response);
+            request.getSession().setAttribute("error", "Lỗi xử lý phụ tùng: " + e.getMessage());
+            response.sendRedirect(request.getContextPath() + "/admin/inventory");
         }
     }
 }
