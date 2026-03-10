@@ -1,0 +1,10 @@
+{
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar",
+        "allowedlib/jakarta.servlet.jsp.jstl-2.0.0.jar",
+        "allowedlib/jakarta.servlet.jsp.jstl-api-2.0.0.jar",
+        "allowedlib/jakarta.servlet-api-6.0.0.jar",
+        "allowedlib/jaxb-api-2.1.jar",
+        "allowedlib/mssql-jdbc-13.2.0.jre11.jar"
+    ]
+}
