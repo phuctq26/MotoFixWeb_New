@@ -16,9 +16,25 @@ public class AdminServiceController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        String pageStr = request.getParameter("page");
+        int page = 1;
+        int pageSize = 10;
+        if (pageStr != null && !pageStr.isEmpty()) {
+            try {
+                page = Integer.parseInt(pageStr);
+            } catch (NumberFormatException ignored) {}
+        }
+
         try {
-            List<Service> services = serviceDAO.listAll();
+            int totalServices = serviceDAO.countAll();
+            int totalPages = (int) Math.ceil((double) totalServices / pageSize);
+            int offset = (page - 1) * pageSize;
+
+            List<Service> services = serviceDAO.listPaged(offset, pageSize);
+
             request.setAttribute("services", services);
+            request.setAttribute("currentPage", page);
+            request.setAttribute("totalPages", totalPages);
         } catch (SQLException e) {
             request.setAttribute("error", "Không thể tải danh sách dịch vụ.");
         }

@@ -202,28 +202,9 @@ public class UserDAO extends DBContext {
             stmt.setString(1, username);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    String storedHash = rs.getString("PasswordHash");
-                    String inputHash = com.motofix.util.PasswordUtil.hash(password);
-
-                    boolean valid = false;
-                    if (storedHash.equals(inputHash)) {
-                        valid = true;
-                    } // Legacy plain text check (Auto-migrate to SHA-256)
-                    else if (storedHash.equals(password)) {
-                        String updateSql = "UPDATE Accounts SET PasswordHash = ? WHERE AccountID = ?";
-                        try (PreparedStatement updateStmt = connection.prepareStatement(updateSql)) {
-                            updateStmt.setString(1, inputHash);
-                            updateStmt.setInt(2, rs.getInt("AccountID"));
-                            updateStmt.executeUpdate();
-                        }
-                        valid = true;
-                        storedHash = inputHash;
-                    }
-
-                    if (valid) {
-                        User user = mapAccount(rs);
-                        user.setPasswordHash(storedHash);
-                        return user;
+                    String storedPassword = rs.getString("PasswordHash");
+                    if (storedPassword != null && storedPassword.equals(password)) {
+                        return mapAccount(rs);
                     }
                 }
             }
@@ -276,17 +257,17 @@ public class UserDAO extends DBContext {
     }
 
     /**
-     * Create customer with all fields: fullName, phone, hashed password, email,
+     * Create customer with all fields: fullName, phone, password, email,
      * address.
      */
-    public void createCustomerFull(String fullName, String phone, String hashedPassword,
+    public void createCustomerFull(String fullName, String phone, String password,
             String email, String address) throws SQLException {
         String sql = "INSERT INTO Accounts (FullName, Phone, PasswordHash, Role, Email, Address) "
                 + "VALUES (?, ?, ?, 'CUSTOMER', ?, ?)";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, fullName);
             stmt.setString(2, phone);
-            stmt.setString(3, hashedPassword);
+            stmt.setString(3, password);
             stmt.setString(4, email != null ? email : "");
             stmt.setString(5, address != null ? address : "");
             stmt.executeUpdate();
@@ -344,13 +325,13 @@ public class UserDAO extends DBContext {
         }
     }
 
-    public void changePassword(int userId, String newPasswordHash) throws SQLException {
+    public void changePassword(int userId, String newPassword) throws SQLException {
 
         String sql = "UPDATE Accounts SET PasswordHash = ? WHERE AccountID = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
-            stmt.setString(1, newPasswordHash);
+            stmt.setString(1, newPassword);
             stmt.setInt(2, userId);
 
             stmt.executeUpdate();

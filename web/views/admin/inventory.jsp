@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c"   uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fn"  uri="http://java.sun.com/jsp/jstl/functions" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
@@ -325,10 +325,28 @@
               </c:choose>
             </tbody>
           </table>
-        </div>
-
-        <div class="text-muted small mt-2">
-          Tổng: <strong>${fn:length(parts)}</strong> loại phụ tùng
+        <!-- ===== PAGINATION ===== -->
+        <div class="d-flex justify-content-between align-items-center mt-3">
+          <div class="text-muted small">
+            Hiển thị <strong>${fn:length(parts)}</strong> / tổng số phụ tùng
+          </div>
+          <c:if test="${totalPages > 1}">
+            <nav>
+              <ul class="pagination pagination-sm mb-0">
+                <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
+                  <a class="page-link" href="?page=${currentPage - 1}"><i class="bi bi-chevron-left"></i></a>
+                </li>
+                <c:forEach begin="1" end="${totalPages}" var="i">
+                  <li class="page-item ${currentPage == i ? 'active' : ''}">
+                    <a class="page-link" href="?page=${i}">${i}</a>
+                  </li>
+                </c:forEach>
+                <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
+                  <a class="page-link" href="?page=${currentPage + 1}"><i class="bi bi-chevron-right"></i></a>
+                </li>
+              </ul>
+            </nav>
+          </c:if>
         </div>
       </div>
 

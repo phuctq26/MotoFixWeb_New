@@ -23,27 +23,39 @@ public class ServiceDAO extends DBContext {
 
     public List<Service> listAll() throws SQLException {
         List<Service> services = new ArrayList<>();
-        try {
-            String sql = """
-                         select  s.ServiceID, s.ServiceName, s.Description, s.Price, s.IsActive
-                         from Services as s
-                         """;
-            st = connection.prepareStatement(sql);
-            // truyen tham so cho cau lenh sql
-            rs = st.executeQuery(); // select
+        String sql = "SELECT * FROM Services ORDER BY ServiceID DESC";
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
-                int ServiceID = rs.getInt("ServiceID");
-                String ServiceName = rs.getString("ServiceName");
-                String Description = rs.getString("Description");
-                double Price = rs.getDouble("Price");
-                boolean IsActive = rs.getBoolean("IsActive");
-                Service service = new Service(ServiceID, ServiceName, Description, Price, IsActive);
-                services.add(service);
+                services.add(map(rs));
             }
-            return services;
-        } catch (Exception e) {
-            return null;
         }
+        return services;
+    }
+
+    public int countAll() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM Services";
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) return rs.getInt(1);
+        }
+        return 0;
+    }
+
+    public List<Service> listPaged(int offset, int limit) throws SQLException {
+        List<Service> list = new ArrayList<>();
+        String sql = "SELECT * FROM Services ORDER BY ServiceID DESC "
+                   + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, offset);
+            stmt.setInt(2, limit);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    list.add(map(rs));
+                }
+            }
+        }
+        return list;
     }
 
     public Service findById(int id) throws SQLException {

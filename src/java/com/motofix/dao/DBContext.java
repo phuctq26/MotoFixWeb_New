@@ -19,7 +19,7 @@ import java.util.logging.Logger;
  * @author FPT University - PRJ30X
  */
 public class DBContext {
-    protected Connection connection;
+    public Connection connection;
     public DBContext() {
         //@Students: You are not allowed to edit this method  
         try {

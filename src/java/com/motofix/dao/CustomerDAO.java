@@ -1,7 +1,6 @@
 package com.motofix.dao;
 
 import com.motofix.model.Customer;
-import com.motofix.util.PasswordUtil;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +39,36 @@ public class CustomerDAO extends DBContext {
                 ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 list.add(map(rs));
+            }
+        }
+        return list;
+    }
+
+    public int countAll() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM Customers";
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+
+    public List<Customer> listPaged(int offset, int limit) throws SQLException {
+        String sql = "SELECT c.CustomerID, a.AccountID, a.Username, a.firstName, a.lastName, "
+                + "a.Email, a.AvatarUrl, a.IsActive, c.Address "
+                + "FROM Customers c JOIN Accounts a ON c.AccountID = a.AccountID "
+                + "ORDER BY c.CustomerID DESC "
+                + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        List<Customer> list = new ArrayList<>();
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, offset);
+            stmt.setInt(2, limit);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    list.add(map(rs));
+                }
             }
         }
         return list;
@@ -84,9 +113,9 @@ public class CustomerDAO extends DBContext {
      */
     public void create(String username, String firstName, String lastName,
             String email, String password, String address) throws SQLException {
-        String hash = (password != null && !password.isEmpty())
-                ? PasswordUtil.hash(password)
-                : PasswordUtil.hash("123");
+        String passToStore = (password != null && !password.isEmpty())
+                ? password
+                : "123";
 
         connection.setAutoCommit(false);
         try {
@@ -95,7 +124,7 @@ public class CustomerDAO extends DBContext {
                     + "VALUES (?, ?, ?, ?, ?, 'CUSTOMER')";
             try (PreparedStatement stmt = connection.prepareStatement(sqlAcc, Statement.RETURN_GENERATED_KEYS)) {
                 stmt.setString(1, username);
-                stmt.setString(2, hash);
+                stmt.setString(2, passToStore);
                 stmt.setString(3, firstName);
                 stmt.setString(4, lastName);
                 stmt.setString(5, email);

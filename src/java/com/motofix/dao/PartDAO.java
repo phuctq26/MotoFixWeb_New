@@ -28,30 +28,39 @@ public class PartDAO extends DBContext {
 
     public List<Part> listAll() throws SQLException {
         List<Part> parts = new ArrayList<>();
-        try {
-            String sql = """
-                         SELECT PartID, PartName, Description, ImportPrice, SellingPrice,
-                         StockQuantity, ImageURL, IsActive FROM Parts ORDER BY PartID DESC
-                         """;
-            st = connection.prepareStatement(sql);
-            // truyen tham so cho cau lenh sql
-            rs = st.executeQuery(); // select
+        String sql = "SELECT * FROM Parts ORDER BY PartID DESC";
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
-                int PartID = rs.getInt("PartID");
-                String PartName = rs.getString("PartName");
-                String Description = rs.getString("Description");
-                double ImportPrice = rs.getDouble("ImportPrice");
-                double SellingPrice = rs.getDouble("SellingPrice");
-                int StockQuantity = rs.getInt("StockQuantity");
-                String ImageURL = rs.getString("ImageURL");
-                boolean IsActive = rs.getBoolean("IsActive");
-                Part part = new Part(PartID, PartName, Description, ImportPrice, SellingPrice, StockQuantity, ImageURL, IsActive);
-                parts.add(part);
+                parts.add(map(rs));
             }
-            return parts;
-        } catch (Exception e) {
-            return null;
         }
+        return parts;
+    }
+
+    public int countAll() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM Parts";
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) return rs.getInt(1);
+        }
+        return 0;
+    }
+
+    public List<Part> listPaged(int offset, int limit) throws SQLException {
+        List<Part> list = new ArrayList<>();
+        String sql = "SELECT * FROM Parts ORDER BY PartID DESC "
+                   + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, offset);
+            stmt.setInt(2, limit);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    list.add(map(rs));
+                }
+            }
+        }
+        return list;
     }
 
     public Part findById(int id) throws SQLException {

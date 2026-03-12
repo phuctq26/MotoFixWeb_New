@@ -1,1 +1,6 @@
 /dist/
+# Bỏ qua thư mục build và chạy dự án của NetBeans
+build/
+
+# Bỏ qua cấu hình môi trường cá nhân của NetBeans
+nbproject/private/
