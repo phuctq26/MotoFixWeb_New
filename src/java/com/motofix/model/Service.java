@@ -8,8 +8,21 @@ public class Service {
     private String serviceName;
     private String description;
     private double price;
-    private boolean isActive = true;
+    private boolean isActive;
 
+    public Service() {
+    }
+
+    public Service(int serviceId, String serviceName, String description, double price, boolean isActive) {
+        this.serviceId = serviceId;
+        this.serviceName = serviceName;
+        this.description = description;
+        this.price = price;
+        this.isActive = isActive;
+    }
+    
+    
+    
     public int getServiceId() {
         return serviceId;
     }

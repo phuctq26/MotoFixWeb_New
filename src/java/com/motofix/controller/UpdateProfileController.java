@@ -6,7 +6,7 @@ import jakarta.servlet.*;
 import jakarta.servlet.http.*;
 import java.io.IOException;
 import java.sql.SQLException;
-import com.motofix.controller.DBContext;
+import com.motofix.dao.DBContext;
 
 public class UpdateProfileController extends HttpServlet {
 

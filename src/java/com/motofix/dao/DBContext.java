@@ -1,4 +1,4 @@
-package com.motofix.controller;
+package com.motofix.dao;
 
 import java.io.IOException;
 import java.io.InputStream;

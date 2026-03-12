@@ -1,6 +1,5 @@
 package com.motofix.dao;
 
-import com.motofix.controller.DBContext;
 import com.motofix.model.Customer;
 import com.motofix.util.PasswordUtil;
 import java.sql.*;

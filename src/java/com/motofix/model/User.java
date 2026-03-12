@@ -9,8 +9,25 @@ public class User {
     private String address;
     private String email;
     private String avatarUrl;
-    private boolean isActive = true;
+    private boolean isActive;
 
+    public User() {
+    }
+
+    public User(int userId, String fullName, String phone, String passwordHash, String role, String address, String email, String avatarUrl, boolean isActive) {
+        this.userId = userId;
+        this.fullName = fullName;
+        this.phone = phone;
+        this.passwordHash = passwordHash;
+        this.role = role;
+        this.address = address;
+        this.email = email;
+        this.avatarUrl = avatarUrl;
+        this.isActive = isActive;
+    }
+    
+    
+    
     public int getUserId() {
         return userId;
     }

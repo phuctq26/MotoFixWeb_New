@@ -1,34 +1,64 @@
 package com.motofix.dao;
 
-import com.motofix.controller.DBContext;
 import com.motofix.model.TicketItem;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class TicketItemDAO extends DBContext {
-
+    PreparedStatement st;
+    ResultSet rs;
     public List<TicketItem> listByTicket(int ticketId) throws SQLException {
-        String sql = "SELECT ID, TicketID, ItemName, Quantity, UnitPrice, TotalPrice, Type "
-                + "FROM TicketItems WHERE TicketID = ?";
-        List<TicketItem> items = new ArrayList<>();
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, ticketId);
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    TicketItem item = new TicketItem();
-                    item.setId(rs.getInt("ID"));
-                    item.setTicketId(rs.getInt("TicketID"));
-                    item.setItemName(rs.getString("ItemName"));
-                    item.setQuantity(rs.getInt("Quantity"));
-                    item.setUnitPrice(rs.getDouble("UnitPrice"));
-                    item.setTotalPrice(rs.getDouble("TotalPrice"));
-                    item.setType(rs.getString("Type"));
-                    items.add(item);
-                }
+        List<TicketItem> ticketitems = new ArrayList<>();
+        try {
+            String sql = """
+                         SELECT * FROM (
+                             SELECT 
+                                 rsd.DetailID AS ID,
+                                 rsd.OrderID AS TicketID,
+                                 s.ServiceName AS ItemName,
+                                 rsd.Quantity,
+                                 rsd.UnitPrice,
+                                 rsd.TotalPrice,
+                                 'SERVICE' AS Type
+                             FROM RepairServiceDetails rsd
+                             JOIN Services s ON rsd.ServiceID = s.ServiceID
+                         
+                             UNION ALL
+                         
+                             SELECT
+                                 rpd.DetailID AS ID,
+                                 rpd.OrderID AS TicketID,
+                                 p.PartName AS ItemName,
+                                 rpd.Quantity,
+                                 rpd.UnitPrice,
+                                 rpd.TotalPrice,
+                                 'PART' AS Type
+                             FROM RepairPartDetails rpd
+                             JOIN Parts p ON rpd.PartID = p.PartID
+                         ) AS items
+                         WHERE TicketID = ?
+                         ORDER BY ID;
+                         """;
+            st = connection.prepareStatement(sql);
+            // truyen tham so cho cau lenh sql
+            st.setInt(1, ticketId);
+            rs = st.executeQuery(); // select
+            while (rs.next()) {
+                int id = rs.getInt("ID");
+                int TicketID = rs.getInt("TicketID");
+                String ItemName = rs.getString("ItemName");
+                int Quantity = rs.getInt("Quantity");
+                double UnitPrice = rs.getDouble("UnitPrice");
+                double TotalPrice = rs.getDouble("TotalPrice");
+                String Type = rs.getString("Type");
+                TicketItem ticket = new TicketItem(id, TicketID, ItemName, Quantity, UnitPrice, TotalPrice, Type);
+                ticketitems.add(ticket);
             }
+            return ticketitems;
+        } catch (Exception e) {
+            return null;
         }
-        return items;
     }
 
     public void addItem(int ticketId, Integer itemId, String itemName, int quantity,

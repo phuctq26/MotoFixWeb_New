@@ -14,6 +14,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 public class AdminReceptionController extends HttpServlet {
+
     private final UserDAO userDAO = new UserDAO();
     private final VehicleDAO vehicleDAO = new VehicleDAO();
     private final RepairTicketDAO ticketDAO = new RepairTicketDAO();
@@ -55,6 +56,9 @@ public class AdminReceptionController extends HttpServlet {
         request.setAttribute("customer", customer);
         List<Vehicle> vehicles = vehicleDAO.listByOwner(customer.getUserId());
         request.setAttribute("vehicles", vehicles);
+
+        Integer bookingVehicleId = vehicleDAO.getVehicleFromBooking(customer.getUserId());
+        request.setAttribute("bookingVehicleId", bookingVehicleId);
     }
 
     private void handleCreateTicketCombined(HttpServletRequest request) throws SQLException {

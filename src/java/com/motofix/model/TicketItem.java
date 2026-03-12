@@ -10,6 +10,19 @@ public class TicketItem {
     private double totalPrice;
     private String type;
 
+    public TicketItem() {
+    }
+
+    public TicketItem(int id, int ticketId, String itemName, int quantity, double unitPrice, double totalPrice, String type) {
+        this.id = id;
+        this.ticketId = ticketId;
+        this.itemName = itemName;
+        this.quantity = quantity;
+        this.unitPrice = unitPrice;
+        this.totalPrice = totalPrice;
+        this.type = type;
+    }
+    
     public int getId() { return id; }
     public void setId(int id) { this.id = id; }
     public int getTicketId() { return ticketId; }

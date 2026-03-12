@@ -1,6 +1,5 @@
 package com.motofix.dao;
 
-import com.motofix.controller.DBContext;
 import com.motofix.model.Part;
 import java.sql.*;
 import java.util.ArrayList;
@@ -10,7 +9,10 @@ import java.util.List;
  * DAO for the Parts table in MotoFixDBNew.
  */
 public class PartDAO extends DBContext {
-
+    
+    PreparedStatement st;
+    ResultSet rs;
+    
     private Part map(ResultSet rs) throws SQLException {
         Part p = new Part();
         p.setPartId(rs.getInt("PartID"));
@@ -25,16 +27,31 @@ public class PartDAO extends DBContext {
     }
 
     public List<Part> listAll() throws SQLException {
-        String sql = "SELECT PartID, PartName, Description, ImportPrice, SellingPrice, "
-                + "StockQuantity, ImageURL, IsActive FROM Parts ORDER BY PartID DESC";
-        List<Part> list = new ArrayList<>();
-        try (PreparedStatement stmt = connection.prepareStatement(sql);
-                ResultSet rs = stmt.executeQuery()) {
+        List<Part> parts = new ArrayList<>();
+        try {
+            String sql = """
+                         SELECT PartID, PartName, Description, ImportPrice, SellingPrice,
+                         StockQuantity, ImageURL, IsActive FROM Parts ORDER BY PartID DESC
+                         """;
+            st = connection.prepareStatement(sql);
+            // truyen tham so cho cau lenh sql
+            rs = st.executeQuery(); // select
             while (rs.next()) {
-                list.add(map(rs));
+                int PartID = rs.getInt("PartID");
+                String PartName = rs.getString("PartName");
+                String Description = rs.getString("Description");
+                double ImportPrice = rs.getDouble("ImportPrice");
+                double SellingPrice = rs.getDouble("SellingPrice");
+                int StockQuantity = rs.getInt("StockQuantity");
+                String ImageURL = rs.getString("ImageURL");
+                boolean IsActive = rs.getBoolean("IsActive");
+                Part part = new Part(PartID, PartName, Description, ImportPrice, SellingPrice, StockQuantity, ImageURL, IsActive);
+                parts.add(part);
             }
+            return parts;
+        } catch (Exception e) {
+            return null;
         }
-        return list;
     }
 
     public Part findById(int id) throws SQLException {

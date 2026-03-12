@@ -1,6 +1,5 @@
 package com.motofix.dao;
 
-import com.motofix.controller.DBContext;
 import com.motofix.model.Service;
 import java.sql.*;
 import java.util.ArrayList;
@@ -10,7 +9,8 @@ import java.util.List;
  * DAO for the Services table in MotoFixDBNew.
  */
 public class ServiceDAO extends DBContext {
-
+    PreparedStatement st;
+    ResultSet rs;
     private Service map(ResultSet rs) throws SQLException {
         Service s = new Service();
         s.setServiceId(rs.getInt("ServiceID"));
@@ -22,16 +22,28 @@ public class ServiceDAO extends DBContext {
     }
 
     public List<Service> listAll() throws SQLException {
-        String sql = "SELECT ServiceID, ServiceName, Description, Price, IsActive "
-                + "FROM Services ORDER BY ServiceID DESC";
-        List<Service> list = new ArrayList<>();
-        try (PreparedStatement stmt = connection.prepareStatement(sql);
-                ResultSet rs = stmt.executeQuery()) {
+        List<Service> services = new ArrayList<>();
+        try {
+            String sql = """
+                         select  s.ServiceID, s.ServiceName, s.Description, s.Price, s.IsActive
+                         from Services as s
+                         """;
+            st = connection.prepareStatement(sql);
+            // truyen tham so cho cau lenh sql
+            rs = st.executeQuery(); // select
             while (rs.next()) {
-                list.add(map(rs));
+                int ServiceID = rs.getInt("ServiceID");
+                String ServiceName = rs.getString("ServiceName");
+                String Description = rs.getString("Description");
+                double Price = rs.getDouble("Price");
+                boolean IsActive = rs.getBoolean("IsActive");
+                Service service = new Service(ServiceID, ServiceName, Description, Price, IsActive);
+                services.add(service);
             }
+            return services;
+        } catch (Exception e) {
+            return null;
         }
-        return list;
     }
 
     public Service findById(int id) throws SQLException {

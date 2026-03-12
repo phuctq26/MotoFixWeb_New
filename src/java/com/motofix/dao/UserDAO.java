@@ -1,12 +1,12 @@
 package com.motofix.dao;
 
-import com.motofix.controller.DBContext;
 import com.motofix.model.User;
 import java.sql.*;
 
 public class UserDAO extends DBContext {
-    
-    
+
+    PreparedStatement st;
+    ResultSet rs;
 
     public User findByUsername(String username) throws SQLException {
         String sql = "SELECT AccountID, Username, firstName, lastName, PasswordHash, Role, Email, IsActive "
@@ -14,105 +14,186 @@ public class UserDAO extends DBContext {
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, username);
             try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next())
+                if (rs.next()) {
                     return mapAccount(rs);
+                }
             }
         }
         return null;
     }
 
-    /** Legacy — kept for compatibility */
+    /**
+     * Legacy — kept for compatibility
+     */
     public User findByPhone(String phone) throws SQLException {
+        try {
+            String sql = """
+            select 
+                a.AccountID,
+                CONCAT(a.lastName, ' ', a.firstName) as FullName,
+                a.Username,
+                a.PasswordHash,
+                a.Role,
+                c.Address,
+                a.Email,
+                a.AvatarUrl,
+                a.IsActive
+            from Accounts a
+            join Customers c on a.AccountID = c.AccountID
+            where a.Username = ?
+        """;
 
-    String sql = "SELECT AccountID, Username, firstName, lastName, PasswordHash, Role, Email, IsActive FROM Accounts WHERE Username = ?";
+            st = connection.prepareStatement(sql);
+            st.setString(1, phone);
 
-    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            rs = st.executeQuery();
 
-        stmt.setString(1, phone);
+            if (rs.next()) {
+                int accountId = rs.getInt("AccountID");
+                String fullName = rs.getString("FullName");
+                String phoneNumber = rs.getString("Username");
+                String passwordHash = rs.getString("PasswordHash");
+                String role = rs.getString("Role");
+                String address = rs.getString("Address");
+                String email = rs.getString("Email");
+                String avatar = rs.getString("AvatarUrl");
+                boolean active = rs.getBoolean("IsActive");
 
-        ResultSet rs = stmt.executeQuery();
+                return new User(accountId, fullName, phoneNumber, passwordHash, role, address, email, avatar, active);
+            }
 
-        if (rs.next()) {
-            return mapAccount(rs);
+            return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
-    }
 
-    return null;
-}
+    }
 
     public User findById(int userId) throws SQLException {
-        String sql = "SELECT AccountID, Username, firstName, lastName, PasswordHash, Role, Email, IsActive "
-                + "FROM Accounts WHERE AccountID = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, userId);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next())
-                    return mapAccount(rs);
+        try {
+            String sql = """
+            select 
+                            a.AccountID,
+                            CONCAT(a.lastName, ' ', a.firstName) as FullName,
+                            a.Username,
+                            a.PasswordHash,
+                            a.Role,
+                            c.Address,
+                            a.Email,
+                            a.AvatarUrl,
+                            a.IsActive
+                        from Accounts a
+                        join Customers c on a.AccountID = c.AccountID
+                        where c.CustomerID = ?
+        """;
+
+            st = connection.prepareStatement(sql);
+            st.setInt(1, userId);
+
+            rs = st.executeQuery();
+
+            if (rs.next()) {
+                int accountId = rs.getInt("AccountID");
+                String fullName = rs.getString("FullName");
+                String phoneNumber = rs.getString("Username");
+                String passwordHash = rs.getString("PasswordHash");
+                String role = rs.getString("Role");
+                String address = rs.getString("Address");
+                String email = rs.getString("Email");
+                String avatar = rs.getString("AvatarUrl");
+                boolean active = rs.getBoolean("IsActive");
+
+                return new User(accountId, fullName, phoneNumber, passwordHash, role, address, email, avatar, active);
             }
+
+            return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
-        return null;
     }
 
     public int createCustomer(String fullName, String phone) throws SQLException {
 
-    String sql = "INSERT INTO Accounts (Username, firstName, lastName, Email, PasswordHash, Role, IsActive) "
-               + "VALUES (?, ?, '', '', ?, 'CUSTOMER', 1)";
+        int accountId = -1;
 
-    try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try {
+            String sql = """
+                INSERT INTO Accounts 
+                    (lastName, firstName, Username, PasswordHash, Role, Email, AvatarUrl, IsActive)
+                VALUES
+                    (?, ?, ?, ?, 'Customer', null, null, 1);
+                """;
 
-        stmt.setString(1, phone); // Username = phone
-        stmt.setString(2, fullName);
-        stmt.setString(3, com.motofix.util.PasswordUtil.hash(phone));
+            String[] strings = fullName.split("\\s+");
+            String lastName = strings[strings.length - 1];  
+            StringBuilder stt = new StringBuilder();
+            for (int i = 0; i < strings.length - 1; i++) {
+                stt.append(strings[i]).append(" ");       
+            }
+            String firstName = stt.toString().trim();
 
-        stmt.executeUpdate();
+           
+            st = connection.prepareStatement(sql);
+            st.setString(1, lastName);
+            st.setString(2, firstName);
+            st.setString(3, phone);  
+            st.setString(4, phone);  
+            st.executeUpdate();
+            ResultSet rs = st.getGeneratedKeys();
+            if (rs.next()) {
+                accountId = rs.getInt(1);
+            }
+            String sqlCus = "INSERT INTO Customers (AccountID, Address) VALUES (?, '')";
+            PreparedStatement st2 = connection.prepareStatement(sqlCus);
+            st2.setInt(1, accountId);
+            st2.executeUpdate();
 
-        ResultSet rs = stmt.getGeneratedKeys();
+            return accountId;
 
-        if (rs.next()) {
-            return rs.getInt(1);
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-    }
 
-    throw new SQLException("Create customer failed");
-}
+        return -1; 
+    }
 
     public int createCustomerWithPassword(String fullName, String phone, String password) throws SQLException {
-    
-    String sql = "INSERT INTO Accounts (Username, firstName, lastName, Email, PasswordHash, Role, IsActive) VALUES (?, ?, ?, ?, ?, 'CUSTOMER', 1)";
 
-    try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        String sql = "INSERT INTO Accounts (Username, firstName, lastName, Email, PasswordHash, Role, IsActive) VALUES (?, ?, ?, ?, ?, 'CUSTOMER', 1)";
 
-        stmt.setString(1, phone);      // Username dùng phone
-        stmt.setString(2, fullName);   // firstName
-        stmt.setString(3, "");         // lastName
-        stmt.setString(4, "");
-        stmt.setString(5, password);
-        
+        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-        stmt.executeUpdate();
+            stmt.setString(1, phone);      // Username dùng phone
+            stmt.setString(2, fullName);   // firstName
+            stmt.setString(3, "");         // lastName
+            stmt.setString(4, "");
+            stmt.setString(5, password);
 
-        ResultSet rs = stmt.getGeneratedKeys();
+            stmt.executeUpdate();
 
-        if (rs.next()) {
+            ResultSet rs = stmt.getGeneratedKeys();
 
-        int accountId = rs.getInt(1);
+            if (rs.next()) {
 
-        // Tạo record trong bảng Customers
-        String sqlCustomer = "INSERT INTO Customers(AccountID) VALUES (?)";
+                int accountId = rs.getInt(1);
 
-        PreparedStatement stmt2 = connection.prepareStatement(sqlCustomer);
+                // Tạo record trong bảng Customers
+                String sqlCustomer = "INSERT INTO Customers(AccountID) VALUES (?)";
 
-        stmt2.setInt(1, accountId);
-        
+                PreparedStatement stmt2 = connection.prepareStatement(sqlCustomer);
 
-        stmt2.executeUpdate();
+                stmt2.setInt(1, accountId);
 
-        return accountId;
-}
+                stmt2.executeUpdate();
+
+                return accountId;
+            }
+        }
+
+        throw new SQLException("Create customer failed");
     }
-
-    throw new SQLException("Create customer failed");
-}
 
     public User authenticate(String username, String password) throws SQLException {
         String sql = "SELECT AccountID, Username, firstName, lastName, PasswordHash, Role, Email, IsActive "
@@ -127,8 +208,7 @@ public class UserDAO extends DBContext {
                     boolean valid = false;
                     if (storedHash.equals(inputHash)) {
                         valid = true;
-                    }
-                    // Legacy plain text check (Auto-migrate to SHA-256)
+                    } // Legacy plain text check (Auto-migrate to SHA-256)
                     else if (storedHash.equals(password)) {
                         String updateSql = "UPDATE Accounts SET PasswordHash = ? WHERE AccountID = ?";
                         try (PreparedStatement updateStmt = connection.prepareStatement(updateSql)) {
@@ -252,32 +332,30 @@ public class UserDAO extends DBContext {
 
     public void updateProfile(int userId, String fullName, String phone, String address) throws SQLException {
 
-    String sql = "UPDATE Accounts SET firstName = ?, Username = ? WHERE AccountID = ?";
+        String sql = "UPDATE Accounts SET firstName = ?, Username = ? WHERE AccountID = ?";
 
-    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
-        stmt.setString(1, fullName);
-        stmt.setString(2, phone);
-        stmt.setInt(3, userId);
+            stmt.setString(1, fullName);
+            stmt.setString(2, phone);
+            stmt.setInt(3, userId);
 
-        stmt.executeUpdate();
+            stmt.executeUpdate();
+        }
     }
-}
 
     public void changePassword(int userId, String newPasswordHash) throws SQLException {
 
-    String sql = "UPDATE Accounts SET PasswordHash = ? WHERE AccountID = ?";
+        String sql = "UPDATE Accounts SET PasswordHash = ? WHERE AccountID = ?";
 
-    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 
-        stmt.setString(1, newPasswordHash);
-        stmt.setInt(2, userId);
+            stmt.setString(1, newPasswordHash);
+            stmt.setInt(2, userId);
 
-        stmt.executeUpdate();
+            stmt.executeUpdate();
+        }
     }
-}
-    
-    
 
     /**
      * Hard-delete a customer and ALL related data in the correct FK order:
@@ -301,17 +379,18 @@ public class UserDAO extends DBContext {
             connection.setAutoCommit(true);
         }
     }
-    
-    public UserDAO() {
-    super();
-}
-    
-    public UserDAO(Connection conn) {
-    this.connection = conn;
-}
-    
 
-    /** Helper: run a single-param int DELETE */
+    public UserDAO() {
+        super();
+    }
+
+    public UserDAO(Connection conn) {
+        this.connection = conn;
+    }
+
+    /**
+     * Helper: run a single-param int DELETE
+     */
     private void exec(String sql, int param) throws SQLException {
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, param);

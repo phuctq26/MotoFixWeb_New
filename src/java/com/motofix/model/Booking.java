@@ -11,6 +11,21 @@ public class Booking {
     private String status;
     private String note;
 
+    public Booking() {
+    }
+
+    public Booking(int bookingId, String customerName, String phone, String plateNumber, Timestamp bookingDate, String status, String note) {
+        this.bookingId = bookingId;
+        this.customerName = customerName;
+        this.phone = phone;
+        this.plateNumber = plateNumber;
+        this.bookingDate = bookingDate;
+        this.status = status;
+        this.note = note;
+    }
+    
+    
+    
     public int getBookingId() { return bookingId; }
     public void setBookingId(int bookingId) { this.bookingId = bookingId; }
     public String getCustomerName() { return customerName; }

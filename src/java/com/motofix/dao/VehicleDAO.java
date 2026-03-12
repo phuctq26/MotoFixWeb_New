@@ -1,13 +1,13 @@
 package com.motofix.dao;
 
-import com.motofix.controller.DBContext;
 import com.motofix.model.Vehicle;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class VehicleDAO extends DBContext {
-
+    PreparedStatement st;
+    ResultSet rs;
     public VehicleDAO() {
         super();
     }
@@ -39,56 +39,101 @@ public class VehicleDAO extends DBContext {
     // Tạo xe mới
     public int create(int ownerId, String plateNumber, String brand, String model) throws SQLException {
 
-        String sql = "INSERT INTO Vehicles (CustomerID, PlateNumber, Brand, Model) VALUES (?, ?, ?, ?)";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-
-            stmt.setInt(1, ownerId);
-            stmt.setString(2, plateNumber);
-            stmt.setString(3, brand);
-            stmt.setString(4, model);
-
-            stmt.executeUpdate();
-
-            try (ResultSet rs = stmt.getGeneratedKeys()) {
-                if (rs.next()) {
-                    return rs.getInt(1);
-                }
+        int vehicleID = -1;
+        try {
+            String sql = """
+                INSERT INTO Vehicles
+                    (CustomerID, PlateNumber, Brand, Model, CreatedAt)
+                VALUES
+                    (?, ?, ?, ?, GETDATE());
+                """;
+            st = connection.prepareStatement(sql);
+            st.setInt(1, ownerId);
+            st.setString(2, plateNumber);
+            st.setString(3, brand);
+            st.setString(4, model);
+            st.executeUpdate();
+            ResultSet rs = st.getGeneratedKeys();
+            if (rs.next()) {
+                vehicleID = rs.getInt(1);  
             }
+            return vehicleID;
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-
-        throw new SQLException("Create vehicle failed");
+        return -1;
     }
 
     // Lấy danh sách xe của 1 customer
     public List<Vehicle> listByOwner(int ownerId) throws SQLException {
 
-        String sql = "SELECT VehicleID, CustomerID, PlateNumber, Brand, Model " +
-                     "FROM Vehicles WHERE CustomerID = ? ORDER BY VehicleID DESC";
-
         List<Vehicle> vehicles = new ArrayList<>();
+        try {
+            String sql = """
+                         select distinct
+                             v.VehicleID,
+                             a.AccountID,
+                             v.PlateNumber,
+                             v.Brand,
+                             v.Model
+                         from Vehicles v
+                         join Customers c on v.CustomerID = c.CustomerID
+                         join Accounts a on a.AccountID = c.AccountID
+                         where a.AccountID = ?
+                         
+                         union
+                         
+                         select distinct
+                             v.VehicleID,
+                         a.AccountID,
+                             v.PlateNumber,
+                             v.Brand,
+                             v.Model
+                         from Bookings b
+                         join Vehicles v on b.VehicleID = v.VehicleID
+                         join Customers c on b.CustomerID = c.CustomerID
+                         join Accounts a on a.AccountID = c.AccountID
+                         where a.AccountID = ?
+                           and b.Status = 'CONFIRMED';
+                         """;
+            st = connection.prepareStatement(sql);
+            // truyen tham so cho cau lenh sql
+            st.setInt(1, ownerId);
+            st.setInt(2, ownerId);
+            rs = st.executeQuery(); // select
+            while (rs.next()) {
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+                int VehicleID = rs.getInt("VehicleID");
+                int AccountID = rs.getInt("AccountID");
+                String PlateNumber = rs.getString("PlateNumber");
+                String Brand = rs.getString("Brand");
+                String Model = rs.getString("Model");
 
-            stmt.setInt(1, ownerId);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-
-                while (rs.next()) {
-
-                    Vehicle v = new Vehicle();
-
-                    v.setVehicleId(rs.getInt("VehicleID"));
-                    v.setOwnerId(rs.getInt("CustomerID"));
-                    v.setPlateNumber(rs.getString("PlateNumber"));
-                    v.setBrand(rs.getString("Brand"));
-                    v.setModel(rs.getString("Model"));
-
-                    vehicles.add(v);
-                }
+                Vehicle acc = new Vehicle(VehicleID, AccountID, PlateNumber, Brand, Model);
+                vehicles.add(acc);
             }
+            return vehicles;
+        } catch (Exception e) {
+            return null;
         }
+    }
 
-        return vehicles;
+    public Integer getVehicleFromBooking(int userId) {
+        String sql = """
+                     SELECT VehicleID
+                     FROM Bookings
+                     WHERE CustomerID = ? AND Status = 'Confirmed' ORDER BY BookingID DESC
+                     """;
+        try {
+            st.setInt(1, userId);
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                int v = rs.getInt("VehicleID");
+                return rs.wasNull() ? null : v;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 }

@@ -1,13 +1,15 @@
 package com.motofix.dao;
 
-import com.motofix.controller.DBContext;
 import com.motofix.model.Booking;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class BookingDAO extends DBContext {
-
+    
+    PreparedStatement st;
+    ResultSet rs;
+    
     public void create(int customerId, Integer vehicleId, Timestamp bookingDate, String note) throws SQLException {
         String sql = "INSERT INTO Bookings (CustomerID, VehicleID, BookingDate, Status, Note) VALUES (?, ?, ?, 'PENDING', ?)";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -23,29 +25,40 @@ public class BookingDAO extends DBContext {
             stmt.executeUpdate();
         }
     }
-
+    
+    
+    // lay tat ca danh sach booking
     public List<Booking> listAll() throws SQLException {
-        String sql = "SELECT b.BookingID, a.firstName AS FullName, a.Username AS Phone, v.PlateNumber, b.BookingDate, b.Status, b.Note "
-        + "FROM Bookings b "
-        + "JOIN Accounts a ON b.CustomerID = a.AccountID "
-        + "LEFT JOIN Vehicles v ON b.VehicleID = v.VehicleID "
-        + "ORDER BY b.BookingDate DESC";
-        List<Booking> items = new ArrayList<>();
-        try (PreparedStatement stmt = connection.prepareStatement(sql);
-                ResultSet rs = stmt.executeQuery()) {
+        List<Booking> bookings = new ArrayList<>();
+        try {
+            String sql = """
+                         select 
+                         b.BookingID, CONCAT(a.lastName, ' ',a.firstName) as FullName, a.Username,
+                         v.PlateNumber, b.BookingDate, b.Status, b.Note
+                         from Bookings as b
+                         join Customers as c on b.CustomerID = c.CustomerID
+                         join Accounts as a on c.AccountID = a.AccountID
+                         left join Vehicles as v on v.VehicleID = b.VehicleID
+                         ORDER BY b.BookingDate DESC
+                         """;
+            st = connection.prepareStatement(sql);
+            // truyen tham so cho cau lenh sql
+            rs = st.executeQuery(); // select
             while (rs.next()) {
-                Booking b = new Booking();
-                b.setBookingId(rs.getInt("BookingID"));
-                b.setCustomerName(rs.getString("FullName"));
-                b.setPhone(rs.getString("Phone"));
-                b.setPlateNumber(rs.getString("PlateNumber"));
-                b.setBookingDate(rs.getTimestamp("BookingDate"));
-                b.setStatus(rs.getString("Status"));
-                b.setNote(rs.getString("Note"));
-                items.add(b);
+                int BookingID = rs.getInt("BookingID");
+                String FullName = rs.getString("FullName");
+                String Username = rs.getString("Username");
+                String PlateNumber = rs.getString("PlateNumber");
+                Timestamp bookingDate = rs.getTimestamp("BookingDate");
+                String Status = rs.getString("Status");
+                String Note = rs.getString("Note");
+                Booking booking = new Booking(BookingID, FullName, Username, PlateNumber, bookingDate, Status, Note);
+                bookings.add(booking);
             }
+            return bookings;
+        } catch (Exception e) {
+            return null;
         }
-        return items;
     }
 
     public void updateStatus(int bookingId, String status) throws SQLException {
@@ -54,6 +67,48 @@ public class BookingDAO extends DBContext {
             stmt.setString(1, status);
             stmt.setInt(2, bookingId);
             stmt.executeUpdate();
+        }
+    }
+    
+    // tim kiem theo bien so xe, phone, name
+    public Object findALLByValue(String value) {
+        List<Booking> bookings = new ArrayList<>();
+        try {
+            String sql = """
+                         select 
+                         b.BookingID, CONCAT(a.lastName, ' ',a.firstName) as FullName, a.Username,
+                         v.PlateNumber, b.BookingDate, b.Status, b.Note
+                         from Bookings as b
+                         join Customers as c on b.CustomerID = c.CustomerID
+                         join Accounts as a on c.AccountID = a.AccountID
+                         left join Vehicles as v on v.VehicleID = b.VehicleID
+                         WHERE 
+                         CONCAT(a.FirstName, ' ', a.LastName) LIKE ? OR
+                         a.Username LIKE ? OR
+                         v.PlateNumber LIKE ?
+                         ORDER BY b.BookingDate DESC
+                         """;
+            st = connection.prepareStatement(sql);
+            // truyen tham so cho cau lenh sql
+            String k = "%" + value + "%";
+            st.setString(1, k);
+            st.setString(2, k);
+            st.setString(3, k);
+            rs = st.executeQuery(); // select
+            while (rs.next()) {
+                int BookingID = rs.getInt("BookingID");
+                String FullName = rs.getString("FullName");
+                String Username = rs.getString("Username");
+                String PlateNumber = rs.getString("PlateNumber");
+                Timestamp bookingDate = rs.getTimestamp("BookingDate");
+                String Status = rs.getString("Status");
+                String Note = rs.getString("Note");
+                Booking booking = new Booking(BookingID, FullName, Username, PlateNumber, bookingDate, Status, Note);
+                bookings.add(booking);
+            }
+            return bookings;
+        } catch (Exception e) {
+            return null;
         }
     }
 }

@@ -11,8 +11,24 @@ public class Part {
     private double sellingPrice;
     private int stockQuantity;
     private String imageUrl;
-    private boolean isActive = true;
+    private boolean isActive;
 
+    public Part() {
+    }
+
+    public Part(int partId, String partName, String description, double importPrice, double sellingPrice, int stockQuantity, String imageUrl, boolean isActive) {
+        this.partId = partId;
+        this.partName = partName;
+        this.description = description;
+        this.importPrice = importPrice;
+        this.sellingPrice = sellingPrice;
+        this.stockQuantity = stockQuantity;
+        this.imageUrl = imageUrl;
+        this.isActive = isActive;
+    }
+    
+    
+    
     public int getPartId() {
         return partId;
     }

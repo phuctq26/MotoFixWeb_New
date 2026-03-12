@@ -7,6 +7,17 @@ public class Vehicle {
     private String brand;
     private String model;
 
+    public Vehicle() {
+    }
+
+    public Vehicle(int vehicleId, int ownerId, String plateNumber, String brand, String model) {
+        this.vehicleId = vehicleId;
+        this.ownerId = ownerId;
+        this.plateNumber = plateNumber;
+        this.brand = brand;
+        this.model = model;
+    }
+    
     public int getVehicleId() { return vehicleId; }
     public void setVehicleId(int vehicleId) { this.vehicleId = vehicleId; }
     public int getOwnerId() { return ownerId; }
