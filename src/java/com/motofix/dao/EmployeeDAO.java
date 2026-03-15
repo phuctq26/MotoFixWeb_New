@@ -10,7 +10,9 @@ import java.util.List;
  * Các cột FullName, Phone, Position, Salary, HireDate, Status (BIT) đã được xác nhận tồn tại.
  */
 public class EmployeeDAO extends DBContext {
-
+     PreparedStatement st;
+    ResultSet rs;
+    
     private Employee map(ResultSet rs) throws SQLException {
         Employee e = new Employee();
         e.setEmployeeId(rs.getInt("EmployeeID"));
@@ -20,7 +22,7 @@ public class EmployeeDAO extends DBContext {
         e.setSalary(rs.getLong("Salary"));
         Date hireDate = rs.getDate("HireDate");
         e.setHireDate(hireDate != null ? hireDate.toString() : "");
-        e.setActive(rs.getBoolean("Status"));
+        e.setActive(rs.getInt("Status"));
         return e;
     }
 
@@ -29,6 +31,38 @@ public class EmployeeDAO extends DBContext {
         String sql = "SELECT * FROM Employees ORDER BY EmployeeID DESC";
         try (PreparedStatement stmt = connection.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                list.add(map(rs));
+            }
+        }
+        return list;
+    }
+    
+    public List<Employee> listAllBySatus1() throws SQLException {
+        List<Employee> list = new ArrayList<>();
+        String sql = """
+                     SELECT * FROM Employees
+                     
+                     ORDER BY status DESC
+                     """;
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                list.add(map(rs));
+            }
+        }
+        return list;
+    }
+    
+    public List<Employee> listAllBySatus(int id) throws SQLException {
+        List<Employee> list = new ArrayList<>();
+        String sql = """
+                     SELECT * FROM Employees WHERE Status = 2 OR EmployeeID = ?
+                     ORDER BY status DESC
+                     """;
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            stmt.setInt(1, id);
             while (rs.next()) {
                 list.add(map(rs));
             }
@@ -107,6 +141,58 @@ public class EmployeeDAO extends DBContext {
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, id);
             stmt.executeUpdate();
+        }
+    }
+
+    public void updateStatus(int parseInt, int status) {
+        try{
+            String sql = """
+                            UPDATE Employees
+                            SET Status = ?
+                            WHERE EmployeeID = ?;
+                         """;
+            st = connection.prepareStatement(sql);
+            // truyen tham so cho cau lenh sql
+            st.setInt(1, status);
+            st.setInt(2, parseInt);
+            st.executeUpdate();           
+        }catch(SQLException e){
+            
+        }
+    }
+
+    public Employee findByID(int parseInt) {
+        Employee acc; 
+        try{
+            String sql = """
+                            SELECT  [EmployeeID]
+                                  ,[Position]
+                                  ,[Salary]
+                                  ,[HireDate]
+                                  ,[FullName]
+                                  ,[Phone]
+                                  ,[Status]
+                              FROM [[Employees]
+                              where EmployeeID = ?
+                         """;
+            st = connection.prepareStatement(sql);
+            // truyen tham so cho cau lenh sql
+            st.setInt(1, parseInt);
+            rs = st.executeQuery();
+            if(rs.next()){
+                acc = new Employee();
+                acc.setFullName(rs.getString("FullName"));
+                acc.setPhone(rs.getString("Phone"));
+                acc.setPosition(rs.getString("Position"));
+                acc.setSalary(rs.getLong("Salary"));
+                acc.setActive(rs.getInt("Status"));
+                return acc;
+            }
+            else{
+                return null;
+            }
+        }catch(Exception e){
+            return null;
         }
     }
 }

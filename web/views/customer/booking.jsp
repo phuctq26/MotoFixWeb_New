@@ -111,8 +111,8 @@
             <label class="form-label">Dịch vụ yêu cầu</label>
             <select class="form-select" name="service">
               <option>Bảo dưỡng định kỳ</option>
-              <option>Thay nhớt</option>
-              <option>Kiểm tra phanh</option>
+              <option>Sửa Chữa</option>
+              
             </select>
           </div>
 

@@ -12,7 +12,7 @@ public class Employee {
     private String position;
     private long salary;
     private String hireDate; // yyyy-MM-dd
-    private boolean status = true; // maps to Status BIT column
+    private int status; // maps to Status BIT column
 
     public int getEmployeeId() {
         return employeeId;
@@ -63,11 +63,21 @@ public class Employee {
     }
 
     /** Status BIT: true = đang làm, false = đã nghỉ */
-    public boolean isActive() {
+    public int isActive() {
+        return status;
+    }
+    
+    public void setActive(int v) {
+        this.status = v;
+    }
+
+    public int getStatus() {
         return status;
     }
 
-    public void setActive(boolean v) {
-        this.status = v;
+    public void setStatus(int status) {
+        this.status = status;
     }
+    
+    
 }

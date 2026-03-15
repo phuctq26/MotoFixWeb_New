@@ -9,10 +9,10 @@ import java.util.List;
  * DAO for the Parts table in MotoFixDBNew.
  */
 public class PartDAO extends DBContext {
-    
+
     PreparedStatement st;
     ResultSet rs;
-    
+
     private Part map(ResultSet rs) throws SQLException {
         Part p = new Part();
         p.setPartId(rs.getInt("PartID"));
@@ -29,8 +29,7 @@ public class PartDAO extends DBContext {
     public List<Part> listAll() throws SQLException {
         List<Part> parts = new ArrayList<>();
         String sql = "SELECT * FROM Parts ORDER BY PartID DESC";
-        try (PreparedStatement stmt = connection.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+        try (PreparedStatement stmt = connection.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 parts.add(map(rs));
             }
@@ -40,9 +39,10 @@ public class PartDAO extends DBContext {
 
     public int countAll() throws SQLException {
         String sql = "SELECT COUNT(*) FROM Parts";
-        try (PreparedStatement stmt = connection.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            if (rs.next()) return rs.getInt(1);
+        try (PreparedStatement stmt = connection.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
         }
         return 0;
     }
@@ -50,7 +50,7 @@ public class PartDAO extends DBContext {
     public List<Part> listPaged(int offset, int limit) throws SQLException {
         List<Part> list = new ArrayList<>();
         String sql = "SELECT * FROM Parts ORDER BY PartID DESC "
-                   + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+                + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, offset);
             stmt.setInt(2, limit);
@@ -110,12 +110,31 @@ public class PartDAO extends DBContext {
         }
     }
 
-    /** Soft delete: set IsActive = 0 */
+    /**
+     * Soft delete: set IsActive = 0
+     */
     public void deactivate(int id) throws SQLException {
         String sql = "UPDATE Parts SET IsActive=0 WHERE PartID=?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, id);
             stmt.executeUpdate();
+        }
+    }
+
+    public void updateStock(int partId, int newQuantity) {
+        try{
+            String sql = """
+                           UPDATE Parts SET StockQuantity = ? WHERE PartID = ?
+                         """;
+            st = connection.prepareStatement(sql);
+            // truyen tham so cho cau lenh sql
+            
+            st.setInt(1, newQuantity);
+            st.setInt(2, partId);
+            
+            st.executeUpdate();           
+        }catch(SQLException e){
+            
         }
     }
 }

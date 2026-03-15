@@ -1,5 +1,6 @@
 package com.motofix.controller;
 
+import com.motofix.dao.InvoiceDAO;
 import com.motofix.dao.RepairTicketDAO;
 import com.motofix.dao.TicketItemDAO;
 import com.motofix.model.RepairTicket;
@@ -11,14 +12,19 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 public class AdminInvoiceController extends HttpServlet {
+
     private final RepairTicketDAO repairTicketDAO = new RepairTicketDAO();
     private final TicketItemDAO itemDAO = new TicketItemDAO();
+    private final InvoiceDAO invoiceDao = new InvoiceDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String idParam = request.getParameter("ticketId");
         try {
-            request.setAttribute("tickets", repairTicketDAO.listPaidAll());
+            request.setAttribute("invoices", invoiceDao.getAllInvoices());
+            request.setAttribute("revenueMonth", 0.0);
+            request.setAttribute("invoiceCount", 1);
+            request.setAttribute("revenueToday", 0.0);
             if (idParam != null) {
                 int ticketId = Integer.parseInt(idParam);
                 RepairTicket ticket = repairTicketDAO.findById(ticketId);

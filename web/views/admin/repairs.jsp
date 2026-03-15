@@ -2,6 +2,7 @@
 <%@ page import="java.util.List"%>
 <%@ page import="java.text.SimpleDateFormat"%>
 <%@ page import="com.motofix.model.*"%>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ page import="java.util.List,java.text.SimpleDateFormat,com.motofix.model.RepairTicket,com.motofix.model.TicketItem,com.motofix.model.Service,com.motofix.model.Part" %>
 <!doctype html>
 <html lang="vi">
@@ -64,11 +65,11 @@
                             </div>
                         </div>
                     </div>
-                                    
-                                    
-                                    
-                                    
-                                    
+
+
+
+
+
                     <div class="col-lg-7">
                         <div class="card p-4">
                             <%
@@ -140,26 +141,41 @@
                                 </div>
                             </form>
 
-                            
-
-
-
-
-
-
-
-
 
                             <form method="post" action="${pageContext.request.contextPath}/admin/repairs" class="mt-4">
+
+                                <input type="hidden" name="ticketId" value="<%= ticket.getTicketId() %>" />
+                                <label class="form-label">Chọn nhân viên:</label>
+                                <select class="form-select" name="employee"
+                                       
+                                        <c:if test="${ticket.status eq 'IN_PROGRESS'}">disabled</c:if>>
+
+                                        <c:forEach var="item" items="${employees}">
+                                            <option value="${item.employeeId}"
+                                                    <c:if test="${item.employeeId == ticket.employeeID}">selected</c:if>
+
+                                                    <c:if test="${item.status == 1 && item.employeeId != ticket.employeeID}">
+                                                        disabled style="color:#aaa;"
+                                                    </c:if>>
+                                                ID:${item.employeeId} - ${item.fullName}
+                                                (<c:if test="${item.status == 1}">Đang bận</c:if>
+                                                <c:if test="${item.status == 2}">Rảnh</c:if>)
+                                                </option>
+                                        </c:forEach>
+                                </select>
+
+
                                 <input type="hidden" name="action" value="updateStatus" />
                                 <input type="hidden" name="ticketId" value="<%= ticket.getTicketId() %>" />
                                 <label class="form-label">Cập nhật trạng thái</label>
                                 <select class="form-select" name="status">
-                                    <option value="OPEN" <%= "OPEN".equalsIgnoreCase(ticket.getStatus()) ? "selected" : "" %>>OPEN</option>
+
                                     <option value="IN_PROGRESS" <%= "IN_PROGRESS".equalsIgnoreCase(ticket.getStatus()) ? "selected" : "" %>>IN_PROGRESS</option>
-                                    <option value="TESTING" <%= "TESTING".equalsIgnoreCase(ticket.getStatus()) ? "selected" : "" %>>TESTING</option>
+
                                     <option value="COMPLETED" <%= "COMPLETED".equalsIgnoreCase(ticket.getStatus()) ? "selected" : "" %>>COMPLETED</option>
                                 </select>
+
+
                                 <button class="btn btn-success mt-3">Cập nhật trạng thái</button>
                             </form>
 
@@ -186,4 +202,3 @@
         </div>
     </body>
 </html>
-    
