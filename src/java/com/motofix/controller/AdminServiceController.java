@@ -25,16 +25,20 @@ public class AdminServiceController extends HttpServlet {
             } catch (NumberFormatException ignored) {}
         }
 
+        String searchValue = request.getParameter("search");
+        if (searchValue == null) searchValue = "";
+
         try {
-            int totalServices = serviceDAO.countAll();
+            int totalServices = serviceDAO.countAll(searchValue);
             int totalPages = (int) Math.ceil((double) totalServices / pageSize);
             int offset = (page - 1) * pageSize;
 
-            List<Service> services = serviceDAO.listPaged(offset, pageSize);
+            List<Service> services = serviceDAO.listPaged(searchValue, offset, pageSize);
 
             request.setAttribute("services", services);
             request.setAttribute("currentPage", page);
             request.setAttribute("totalPages", totalPages);
+            request.setAttribute("currentSearch", searchValue);
         } catch (SQLException e) {
             request.setAttribute("error", "Không thể tải danh sách dịch vụ.");
         }

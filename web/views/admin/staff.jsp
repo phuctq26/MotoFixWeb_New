@@ -42,10 +42,13 @@
 
       <div class="card p-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
-          <div class="input-group" style="max-width:360px;">
-            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-            <input class="form-control" id="searchInput" placeholder="Tìm theo tên hoặc chức vụ..." oninput="filterTable()" />
-          </div>
+          <form method="GET" action="${pageContext.request.contextPath}/admin/staff">
+            <div class="input-group" style="max-width:360px;">
+              <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+              <input class="form-control" name="search" placeholder="Tìm theo tên, SĐT hoặc chức vụ..." value="<c:out value="${currentSearch}"/>" />
+              <button type="submit" class="btn btn-outline-secondary">Lọc</button>
+            </div>
+          </form>
           <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addStaffModal">
             <i class="bi bi-plus-lg"></i> Thêm nhân viên
           </button>
@@ -109,10 +112,8 @@
                     </div>
                     <div class="col-12">
                       <label class="form-label fw-semibold">Trạng thái</label>
-                      <select class="form-select" name="status">
-                        <option value="ACTIVE"   selected>Đang làm việc</option>
-                        <option value="INACTIVE">Đã nghỉ việc</option>
-                      </select>
+                      <input class="form-control" value="Đang rảnh tay (Mặc định khi thêm mới)" readonly>
+                      <input type="hidden" name="status" value="2">
                     </div>
                   </div>
                 </div>
@@ -185,23 +186,34 @@
                       </td>
                       <td class="text-center">
                         <c:choose>
-                          <c:when test="${s.active}">
+                          <c:when test="${s.status == 2}">
                             <span class="badge bg-success-subtle text-success border border-success-subtle">
-                              <i class="bi bi-circle-fill me-1" style="font-size:.5rem"></i>Đang làm
+                              <i class="bi bi-circle-fill me-1" style="font-size:.5rem"></i>Đang rảnh tay
+                            </span>
+                          </c:when>
+                          <c:when test="${s.status == 1}">
+                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle">
+                              <i class="bi bi-circle-fill me-1" style="font-size:.5rem"></i>Đang sửa xe
                             </span>
                           </c:when>
                           <c:otherwise>
-                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Đã nghỉ</span>
+                            <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">Đã nghỉ việc</span>
                           </c:otherwise>
                         </c:choose>
                       </td>
                       <td class="text-end">
                         <button class="btn btn-sm btn-outline-primary" title="Sửa"
-                                data-bs-toggle="modal" data-bs-target="#editModal${s.employeeId}">
+                                data-bs-toggle="modal" data-bs-target="#editModal${s.employeeId}" ${s.status == 1 ? 'disabled' : ''}>
                           <i class="bi bi-pencil"></i>
                         </button>
                         <c:choose>
-                          <c:when test="${s.active}">
+                          <c:when test="${s.status == 1}">
+                            <button class="btn btn-sm btn-outline-warning" disabled
+                                    title="Nhân viên đang làm dịch vụ, không thể thao tác">
+                              <i class="bi bi-slash-circle"></i>
+                            </button>
+                          </c:when>
+                          <c:when test="${s.status == 2}">
                             <button class="btn btn-sm btn-outline-warning" title="Đánh dấu nghỉ việc"
                                     data-bs-toggle="modal" data-bs-target="#deleteModal${s.employeeId}">
                               <i class="bi bi-slash-circle"></i>
@@ -265,8 +277,8 @@
                                 <div class="col-12">
                                   <label class="form-label fw-semibold">Trạng thái</label>
                                   <select class="form-select" name="status">
-                                    <option value="ACTIVE"   ${s.active  ? 'selected' : ''}>Đang làm việc</option>
-                                    <option value="INACTIVE" ${!s.active ? 'selected' : ''}>Đã nghỉ việc</option>
+                                    <option value="2" ${s.status == 2 ? 'selected' : ''}>Đang rảnh tay</option>
+                                    <option value="0" ${s.status == 0 ? 'selected' : ''}>Đã nghỉ việc</option>
                                   </select>
                                 </div>
                               </div>
@@ -330,17 +342,19 @@
           </div>
           <c:if test="${totalPages > 1}">
             <nav>
+              <% String curSearch = request.getAttribute("currentSearch") != null ? (String) request.getAttribute("currentSearch") : ""; 
+                 String searchParam = !curSearch.isEmpty() ? "&search=" + java.net.URLEncoder.encode(curSearch, "UTF-8") : ""; %>
               <ul class="pagination pagination-sm mb-0">
                 <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
-                  <a class="page-link" href="?page=${currentPage - 1}"><i class="bi bi-chevron-left"></i></a>
+                  <a class="page-link" href="?page=${currentPage - 1}<%=searchParam%>"><i class="bi bi-chevron-left"></i></a>
                 </li>
                 <c:forEach begin="1" end="${totalPages}" var="i">
                   <li class="page-item ${currentPage == i ? 'active' : ''}">
-                    <a class="page-link" href="?page=${i}">${i}</a>
+                    <a class="page-link" href="?page=${i}<%=searchParam%>">${i}</a>
                   </li>
                 </c:forEach>
                 <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
-                  <a class="page-link" href="?page=${currentPage + 1}"><i class="bi bi-chevron-right"></i></a>
+                  <a class="page-link" href="?page=${currentPage + 1}<%=searchParam%>"><i class="bi bi-chevron-right"></i></a>
                 </li>
               </ul>
             </nav>
@@ -360,12 +374,6 @@
     }
   </style>
   <script>
-    function filterTable() {
-      const q = document.getElementById('searchInput').value.toLowerCase();
-      document.querySelectorAll('#staffTable tbody tr').forEach(row => {
-        row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
-      });
-    }
     <c:if test="${openModal}">
     document.addEventListener('DOMContentLoaded', function () {
       new bootstrap.Modal(document.getElementById('addStaffModal')).show();

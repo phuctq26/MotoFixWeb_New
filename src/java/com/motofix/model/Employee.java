@@ -62,15 +62,6 @@ public class Employee {
         this.hireDate = v;
     }
 
-    /** Status BIT: true = đang làm, false = đã nghỉ */
-    public boolean isActive() {
-        return status == 1;
-    }
-    
-    public void setActive(boolean v) {
-        this.status = v ? 1 : 0;
-    }
-
     public int getStatus() {
         return status;
     }

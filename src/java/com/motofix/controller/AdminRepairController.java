@@ -42,8 +42,8 @@ public class AdminRepairController extends HttpServlet {
                 request.setAttribute("ticket", ticketDAO.findById(ticketId));
                 request.setAttribute("items", itemDAO.listByTicket(ticketId));
                 //request.setAttribute("item", repairDAO.listByTicket(ticketId));
-                request.setAttribute("services", serviceDAO.listAll());
-                request.setAttribute("parts", partDAO.listAll());
+                request.setAttribute("services", serviceDAO.listAll1());
+                request.setAttribute("parts", partDAO.listAll1());
                 request.setAttribute("employees", employDao.listAllBySatus1());
 
             }

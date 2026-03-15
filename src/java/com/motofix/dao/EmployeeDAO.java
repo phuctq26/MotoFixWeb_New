@@ -22,7 +22,7 @@ public class EmployeeDAO extends DBContext {
         e.setSalary(rs.getLong("Salary"));
         Date hireDate = rs.getDate("HireDate");
         e.setHireDate(hireDate != null ? hireDate.toString() : "");
-        e.setActive(rs.getInt("Status") == 1);
+        e.setStatus(rs.getInt("Status"));
         return e;
     }
 
@@ -39,6 +39,21 @@ public class EmployeeDAO extends DBContext {
     }
     
     public List<Employee> listAllBySatus1() throws SQLException {
+        List<Employee> list = new ArrayList<>();
+        String sql = """
+                     SELECT * FROM Employees e
+                       where e.Position=N'Kỹ thuật viên' and e.Status in (1,2)
+                     ORDER BY status DESC
+                     """;
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                list.add(map(rs));
+            }
+        }
+        return list;
+    }
+    public List<Employee> listAllByStatus1() throws SQLException {
         List<Employee> list = new ArrayList<>();
         String sql = """
                      SELECT * FROM Employees
@@ -70,22 +85,44 @@ public class EmployeeDAO extends DBContext {
         return list;
     }
 
-    public int countAll() throws SQLException {
+    public int countAll(String searchValue) throws SQLException {
         String sql = "SELECT COUNT(*) FROM Employees";
-        try (PreparedStatement stmt = connection.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            if (rs.next()) return rs.getInt(1);
+        if (searchValue != null && !searchValue.trim().isEmpty()) {
+            sql += " WHERE FullName LIKE ? OR Position LIKE ? OR Phone LIKE ?";
+        }
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            if (searchValue != null && !searchValue.trim().isEmpty()) {
+                String k = "%" + searchValue.trim() + "%";
+                stmt.setString(1, k);
+                stmt.setString(2, k);
+                stmt.setString(3, k);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
         }
         return 0;
     }
 
-    public List<Employee> listPaged(int offset, int limit) throws SQLException {
+    public List<Employee> listPaged(String searchValue, int offset, int limit) throws SQLException {
         List<Employee> list = new ArrayList<>();
-        String sql = "SELECT * FROM Employees ORDER BY EmployeeID DESC "
-                   + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        String sql = "SELECT * FROM Employees ";
+        if (searchValue != null && !searchValue.trim().isEmpty()) {
+            sql += " WHERE FullName LIKE ? OR Position LIKE ? OR Phone LIKE ?";
+        }
+        sql += " ORDER BY EmployeeID DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, offset);
-            stmt.setInt(2, limit);
+            int paramIdx = 1;
+            if (searchValue != null && !searchValue.trim().isEmpty()) {
+                String k = "%" + searchValue.trim() + "%";
+                stmt.setString(paramIdx++, k);
+                stmt.setString(paramIdx++, k);
+                stmt.setString(paramIdx++, k);
+            }
+            stmt.setInt(paramIdx++, offset);
+            stmt.setInt(paramIdx, limit);
+            
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     list.add(map(rs));
@@ -107,7 +144,7 @@ public class EmployeeDAO extends DBContext {
     }
 
     public void create(String fullName, String phone, String position,
-                       long salary, String hireDate, boolean isActive) throws SQLException {
+                       long salary, String hireDate, int status) throws SQLException {
         String sql = "INSERT INTO Employees (FullName, Phone, Position, Salary, HireDate, Status) VALUES (?,?,?,?,?,?)";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, fullName);
@@ -115,13 +152,13 @@ public class EmployeeDAO extends DBContext {
             stmt.setString(3, position);
             stmt.setLong(4, salary);
             stmt.setDate(5, (hireDate == null || hireDate.isEmpty()) ? new Date(System.currentTimeMillis()) : Date.valueOf(hireDate));
-            stmt.setInt(6, isActive ? 1 : 0);
+            stmt.setInt(6, status);
             stmt.executeUpdate();
         }
     }
 
     public void update(int id, String fullName, String phone, String position,
-                       long salary, String hireDate, boolean isActive) throws SQLException {
+                       long salary, String hireDate, int status) throws SQLException {
         String sql = "UPDATE Employees SET FullName=?, Phone=?, Position=?, Salary=?, HireDate=?, Status=? WHERE EmployeeID=?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, fullName);
@@ -130,7 +167,7 @@ public class EmployeeDAO extends DBContext {
             stmt.setLong(4, salary);
             if (hireDate == null || hireDate.isEmpty()) stmt.setNull(5, Types.DATE);
             else stmt.setDate(5, Date.valueOf(hireDate));
-            stmt.setInt(6, isActive ? 1 : 0);
+            stmt.setInt(6, status);
             stmt.setInt(7, id);
             stmt.executeUpdate();
         }
@@ -185,7 +222,7 @@ public class EmployeeDAO extends DBContext {
                 acc.setPhone(rs.getString("Phone"));
                 acc.setPosition(rs.getString("Position"));
                 acc.setSalary(rs.getLong("Salary"));
-                acc.setActive(rs.getInt("Status") == 1);
+                acc.setStatus(rs.getInt("Status"));
                 return acc;
             }
             else{

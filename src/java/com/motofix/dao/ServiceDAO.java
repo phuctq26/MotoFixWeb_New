@@ -32,23 +32,53 @@ public class ServiceDAO extends DBContext {
         }
         return services;
     }
-
-    public int countAll() throws SQLException {
-        String sql = "SELECT COUNT(*) FROM Services";
+    public List<Service> listAll1() throws SQLException {
+        List<Service> services = new ArrayList<>();
+        String sql = "SELECT * FROM Services where isActive = 1 ORDER BY ServiceID DESC ";
         try (PreparedStatement stmt = connection.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
-            if (rs.next()) return rs.getInt(1);
+            while (rs.next()) {
+                services.add(map(rs));
+            }
+        }
+        return services;
+    }
+
+    public int countAll(String searchValue) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM Services";
+        if (searchValue != null && !searchValue.trim().isEmpty()) {
+            sql += " WHERE ServiceName LIKE ? OR Description LIKE ?";
+        }
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            if (searchValue != null && !searchValue.trim().isEmpty()) {
+                String k = "%" + searchValue.trim() + "%";
+                stmt.setString(1, k);
+                stmt.setString(2, k);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
         }
         return 0;
     }
 
-    public List<Service> listPaged(int offset, int limit) throws SQLException {
+    public List<Service> listPaged(String searchValue, int offset, int limit) throws SQLException {
         List<Service> list = new ArrayList<>();
-        String sql = "SELECT * FROM Services ORDER BY ServiceID DESC "
-                   + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        String sql = "SELECT * FROM Services";
+        if (searchValue != null && !searchValue.trim().isEmpty()) {
+            sql += " WHERE ServiceName LIKE ? OR Description LIKE ?";
+        }
+        sql += " ORDER BY ServiceID DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, offset);
-            stmt.setInt(2, limit);
+            int paramIdx = 1;
+            if (searchValue != null && !searchValue.trim().isEmpty()) {
+                String k = "%" + searchValue.trim() + "%";
+                stmt.setString(paramIdx++, k);
+                stmt.setString(paramIdx++, k);
+            }
+            stmt.setInt(paramIdx++, offset);
+            stmt.setInt(paramIdx, limit);
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     list.add(map(rs));

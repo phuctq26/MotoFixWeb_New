@@ -41,17 +41,24 @@
 
       <div class="card p-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
-          <div class="d-flex gap-2 align-items-center flex-wrap">
+          <form method="get" action="${pageContext.request.contextPath}/admin/customers" class="d-flex gap-2 align-items-center flex-wrap">
+            <input type="hidden" name="filter" value="<%= request.getAttribute("currentFilter") != null ? request.getAttribute("currentFilter") : "all" %>" />
             <div class="input-group" style="max-width:320px;">
               <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-              <input class="form-control" id="searchInput" placeholder="Tìm theo tên, SĐT..." oninput="filterTable()" />
+              <input class="form-control" name="search" placeholder="Tìm theo tên, SĐT..." value="<c:out value="${currentSearch}"/>" />
+              <button type="submit" class="btn btn-outline-secondary">Lọc</button>
             </div>
+            
+            <% String curSearch = request.getAttribute("currentSearch") != null ? (String) request.getAttribute("currentSearch") : ""; 
+               String searchParam = !curSearch.isEmpty() ? "&search=" + java.net.URLEncoder.encode(curSearch, "UTF-8") : ""; 
+               String currentFilter = (String) request.getAttribute("currentFilter"); %>
+               
             <div class="btn-group">
-              <button class="btn btn-outline-secondary btn-sm active" id="btnAll"      onclick="setFilter('all')">Tất cả</button>
-              <button class="btn btn-outline-success  btn-sm"        id="btnActive"   onclick="setFilter('active')">Đang hoạt động</button>
-              <button class="btn btn-outline-secondary btn-sm"       id="btnInactive" onclick="setFilter('inactive')">Vô hiệu</button>
+              <a href="?filter=all<%=searchParam%>" class="btn btn-outline-secondary btn-sm <%= "all".equals(currentFilter) ? "active" : "" %>">Tất cả</a>
+              <a href="?filter=active<%=searchParam%>" class="btn btn-outline-success btn-sm <%= "active".equals(currentFilter) ? "active" : "" %>">Đang hoạt động</a>
+              <a href="?filter=inactive<%=searchParam%>" class="btn btn-outline-secondary btn-sm <%= "inactive".equals(currentFilter) ? "active" : "" %>">Vô hiệu</a>
             </div>
-          </div>
+          </form>
           <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addCustomerModal">
             <i class="bi bi-plus-lg"></i> Thêm khách hàng
           </button>
@@ -347,15 +354,15 @@
             <nav>
               <ul class="pagination pagination-sm mb-0">
                 <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
-                  <a class="page-link" href="?page=${currentPage - 1}"><i class="bi bi-chevron-left"></i></a>
+                  <a class="page-link" href="?filter=<%= currentFilter %><%=searchParam%>&page=${currentPage - 1}"><i class="bi bi-chevron-left"></i></a>
                 </li>
                 <c:forEach begin="1" end="${totalPages}" var="i">
                   <li class="page-item ${currentPage == i ? 'active' : ''}">
-                    <a class="page-link" href="?page=${i}">${i}</a>
+                    <a class="page-link" href="?filter=<%= currentFilter %><%=searchParam%>&page=${i}">${i}</a>
                   </li>
                 </c:forEach>
                 <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
-                  <a class="page-link" href="?page=${currentPage + 1}"><i class="bi bi-chevron-right"></i></a>
+                  <a class="page-link" href="?filter=<%= currentFilter %><%=searchParam%>&page=${currentPage + 1}"><i class="bi bi-chevron-right"></i></a>
                 </li>
               </ul>
             </nav>
@@ -377,22 +384,6 @@
     .row-inactive td:last-child { opacity: 1; }
   </style>
   <script>
-    let currentFilter = 'all';
-    function setFilter(f) {
-      currentFilter = f;
-      ['btnAll','btnActive','btnInactive'].forEach(id => document.getElementById(id).classList.remove('active'));
-      document.getElementById(f === 'all' ? 'btnAll' : f === 'active' ? 'btnActive' : 'btnInactive').classList.add('active');
-      applyFilter();
-    }
-    function filterTable() { applyFilter(); }
-    function applyFilter() {
-      const q = document.getElementById('searchInput').value.toLowerCase();
-      document.querySelectorAll('.customer-row').forEach(row => {
-        const matchText   = row.textContent.toLowerCase().includes(q);
-        const matchStatus = currentFilter === 'all' || row.dataset.status === currentFilter;
-        row.style.display = (matchText && matchStatus) ? '' : 'none';
-      });
-    }
     <c:if test="${openModal}">
     document.addEventListener('DOMContentLoaded', function () {
       new bootstrap.Modal(document.getElementById('addCustomerModal')).show();

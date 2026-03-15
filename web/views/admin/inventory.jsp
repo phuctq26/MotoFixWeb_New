@@ -35,10 +35,13 @@
 
       <div class="card p-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
-          <div class="input-group" style="max-width:360px;">
-            <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-            <input class="form-control" id="searchInput" placeholder="Tìm theo tên phụ tùng..." oninput="filterTable()" />
-          </div>
+          <form method="get" action="${pageContext.request.contextPath}/admin/inventory">
+            <div class="input-group" style="max-width:360px;">
+              <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+              <input class="form-control" name="search" placeholder="Tìm theo tên phụ tùng..." value="<c:out value="${currentSearch}"/>" />
+              <button type="submit" class="btn btn-outline-secondary">Lọc</button>
+            </div>
+          </form>
           <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPartModal">
             <i class="bi bi-plus-lg"></i> Thêm phụ tùng
           </button>
@@ -332,17 +335,19 @@
           </div>
           <c:if test="${totalPages > 1}">
             <nav>
+              <% String curSearch = request.getAttribute("currentSearch") != null ? (String) request.getAttribute("currentSearch") : ""; 
+                 String searchParam = !curSearch.isEmpty() ? "&search=" + java.net.URLEncoder.encode(curSearch, "UTF-8") : ""; %>
               <ul class="pagination pagination-sm mb-0">
                 <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
-                  <a class="page-link" href="?page=${currentPage - 1}"><i class="bi bi-chevron-left"></i></a>
+                  <a class="page-link" href="?page=${currentPage - 1}<%=searchParam%>"><i class="bi bi-chevron-left"></i></a>
                 </li>
                 <c:forEach begin="1" end="${totalPages}" var="i">
                   <li class="page-item ${currentPage == i ? 'active' : ''}">
-                    <a class="page-link" href="?page=${i}">${i}</a>
+                    <a class="page-link" href="?page=${i}<%=searchParam%>">${i}</a>
                   </li>
                 </c:forEach>
                 <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
-                  <a class="page-link" href="?page=${currentPage + 1}"><i class="bi bi-chevron-right"></i></a>
+                  <a class="page-link" href="?page=${currentPage + 1}<%=searchParam%>"><i class="bi bi-chevron-right"></i></a>
                 </li>
               </ul>
             </nav>
@@ -354,13 +359,6 @@
     </main>
   </div>
 
-  <script>
-    function filterTable() {
-      const q = document.getElementById('searchInput').value.toLowerCase();
-      document.querySelectorAll('#partsTable tbody tr').forEach(row => {
-        row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
-      });
-    }
-  </script>
+
 </body>
 </html>

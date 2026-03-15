@@ -1,6 +1,8 @@
-﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
+<%@ page import="com.motofix.util.VietQrUtil" %>
+<%@ page import="com.motofix.model.RepairTicket" %>
 <!doctype html>
 <html lang="vi">
     <head>
@@ -46,6 +48,15 @@
                                 </c:if>
 
                                 <c:forEach var="tiem" items="${recentInvoices}">
+                                    <c:if test="${tiem.paymentStatus != 'PAID'}">
+                                    <%
+                                        RepairTicket currentTicket = (RepairTicket) pageContext.getAttribute("tiem");
+                                        long qrAmount = (long) currentTicket.getFinalAmount();
+                                        String qrInfo = "Thanh toan hoa don TK " + currentTicket.getTicketId();
+                                        String qrLink = VietQrUtil.generateQrLink(qrAmount, qrInfo);
+                                        pageContext.setAttribute("qrLinkCode", qrLink);
+                                    %>
+                                    </c:if>
                                     <tr>
                                         <td>TK-${tiem.ticketId}</td>
                                         <td>${tiem.customerName}</td>
@@ -58,20 +69,53 @@
                                             <fmt:formatNumber value="${tiem.finalAmount}" type="number"/>đ
                                         </td>
                                         <td class="text-end">
-                                            <form action="${pageContext.request.contextPath}/admin/revenue" method="POST">
+                                            <form action="${pageContext.request.contextPath}/admin/revenue" method="POST" style="display:inline-block;">
                                                 <input type="hidden" name="id" value="${tiem.ticketId}"/>
 
                                                 <c:if test="${tiem.paymentStatus != 'PAID'}">
+                                                    <button type="button" class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#qrModal${tiem.ticketId}">
+                                                        Mã QR
+                                                    </button>
+                                                    
                                                     <button name="action" value="pay" class="btn btn-sm btn-primary">
                                                         Thanh Toán
                                                     </button>
                                                 </c:if>
 
-                                                <button name="action" value="delete" class="btn btn-sm btn-outline-danger"
+                                                <button name="action" value="delete" class="btn btn-sm btn-outline-danger ms-1"
                                                         onclick="return confirm('Bạn có chắc muốn quay lại?');">
                                                     <i class="bi bi-arrow-left-circle"></i>
                                                 </button>
                                             </form>
+                                            
+                                            <c:if test="${tiem.paymentStatus != 'PAID'}">
+                                                <!-- Modal QR Code -->
+                                                <div class="modal fade text-start" id="qrModal${tiem.ticketId}" tabindex="-1">
+                                                    <div class="modal-dialog modal-dialog-centered modal-sm">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title">Thanh toán VNPay QR</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                            </div>
+                                                            <div class="modal-body text-center">
+                                                                <p class="mb-2">Quét mã để thanh toán 
+                                                                    <strong class="text-success"><fmt:formatNumber value="${tiem.finalAmount}" type="number"/>đ</strong>
+                                                                </p>
+                                                                <img src="${qrLinkCode}" alt="QR Code" class="img-fluid border rounded p-2 mb-3" style="max-width: 250px;">
+                                                                <p class="small text-muted mb-0">Hóa đơn: <strong>TK-${tiem.ticketId}</strong></p>
+                                                            </div>
+                                                            <div class="modal-footer justify-content-center p-2">
+                                                                <form action="${pageContext.request.contextPath}/admin/revenue" method="POST">
+                                                                    <input type="hidden" name="id" value="${tiem.ticketId}"/>
+                                                                    <button type="submit" name="action" value="pay" class="btn btn-success">
+                                                                        <i class="bi bi-check-circle me-1"></i>Xác nhận đã thanh toán
+                                                                    </button>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </c:if>
                                         </td>
                                     </tr>
                                 </c:forEach>

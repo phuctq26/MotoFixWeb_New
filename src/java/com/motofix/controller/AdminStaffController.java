@@ -25,16 +25,20 @@ public class AdminStaffController extends HttpServlet {
             } catch (NumberFormatException ignored) {}
         }
 
+        String searchValue = request.getParameter("search");
+        if (searchValue == null) searchValue = "";
+
         try {
-            int totalEmployees = employeeDAO.countAll();
+            int totalEmployees = employeeDAO.countAll(searchValue);
             int totalPages = (int) Math.ceil((double) totalEmployees / pageSize);
             int offset = (page - 1) * pageSize;
             
-            List<Employee> staffs = employeeDAO.listPaged(offset, pageSize);
+            List<Employee> staffs = employeeDAO.listPaged(searchValue, offset, pageSize);
             
             request.setAttribute("staffs", staffs);
             request.setAttribute("currentPage", page);
             request.setAttribute("totalPages", totalPages);
+            request.setAttribute("currentSearch", searchValue);
         } catch (SQLException e) {
             request.setAttribute("error", "Không thể tải danh sách nhân viên.");
         }
@@ -59,18 +63,31 @@ public class AdminStaffController extends HttpServlet {
             salary = Long.parseLong(salaryStr);
         } catch (Exception ignored) {
         }
-        boolean isActive = !"INACTIVE".equals(statusParam);
+        int status = 2; // Default for create
+        if (statusParam != null && !statusParam.isEmpty()) {
+            try {
+                status = Integer.parseInt(statusParam);
+            } catch (Exception ignored) {}
+        }
 
         try {
             if ("delete".equals(action)) {
-                employeeDAO.deactivate(Integer.parseInt(idStr));
-                request.getSession().setAttribute("message", "Đã chuyển nhân viên sang trạng thái nghỉ việc.");
-
+                Employee e = employeeDAO.findByID(Integer.parseInt(idStr));
+                if (e != null && e.getStatus() == 1) {
+                    request.getSession().setAttribute("formError", "Không thể nghỉ việc nhân viên đang bận sửa xe.");
+                } else {
+                    employeeDAO.deactivate(Integer.parseInt(idStr));
+                    request.getSession().setAttribute("message", "Đã chuyển nhân viên sang trạng thái nghỉ việc.");
+                }
             } else if ("edit".equals(action)) {
-                employeeDAO.update(Integer.parseInt(idStr), fullName, phone, position,
-                        salary, hireDate, isActive);
-                request.getSession().setAttribute("message", "Đã cập nhật thông tin nhân viên.");
-
+                Employee e = employeeDAO.findByID(Integer.parseInt(idStr));
+                if (e != null && e.getStatus() == 1) {
+                    request.getSession().setAttribute("formError", "Nhân viên đang làm dịch vụ (sửa xe), không thể thay đổi thông tin.");
+                } else {
+                    employeeDAO.update(Integer.parseInt(idStr), fullName, phone, position,
+                            salary, hireDate, status);
+                    request.getSession().setAttribute("message", "Đã cập nhật thông tin nhân viên.");
+                }
             } else {
                 // CREATE — check duplicate phone first
                 if (phone != null && !phone.isEmpty() && employeeDAO.findByPhone(phone) != null) {
@@ -84,7 +101,7 @@ public class AdminStaffController extends HttpServlet {
                     response.sendRedirect(request.getContextPath() + "/admin/staff");
                     return;
                 }
-                employeeDAO.create(fullName, phone, position, salary, hireDate, isActive);
+                employeeDAO.create(fullName, phone, position, salary, hireDate, 2); // default status = 2 (rảnh tay)
                 request.getSession().setAttribute("message", "Đã thêm nhân viên mới.");
             }
             response.sendRedirect(request.getContextPath() + "/admin/staff");

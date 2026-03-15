@@ -44,27 +44,58 @@ public class CustomerDAO extends DBContext {
         return list;
     }
 
-    public int countAll() throws SQLException {
-        String sql = "SELECT COUNT(*) FROM Customers";
-        try (PreparedStatement stmt = connection.prepareStatement(sql);
-                ResultSet rs = stmt.executeQuery()) {
-            if (rs.next()) {
-                return rs.getInt(1);
+    public int countAll(String searchValue, String statusFilter) throws SQLException {
+        String sql = "SELECT COUNT(*) FROM Customers c JOIN Accounts a ON c.AccountID = a.AccountID WHERE 1=1";
+        if ("active".equals(statusFilter)) {
+            sql += " AND a.IsActive = 1";
+        } else if ("inactive".equals(statusFilter)) {
+            sql += " AND a.IsActive = 0";
+        }
+        if (searchValue != null && !searchValue.trim().isEmpty()) {
+            sql += " AND (a.firstName LIKE ? OR a.lastName LIKE ? OR a.Username LIKE ? OR c.Address LIKE ?)";
+        }
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            if (searchValue != null && !searchValue.trim().isEmpty()) {
+                String k = "%" + searchValue.trim() + "%";
+                stmt.setString(1, k);
+                stmt.setString(2, k);
+                stmt.setString(3, k);
+                stmt.setString(4, k);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
             }
         }
         return 0;
     }
 
-    public List<Customer> listPaged(int offset, int limit) throws SQLException {
+    public List<Customer> listPaged(String searchValue, String statusFilter, int offset, int limit) throws SQLException {
         String sql = "SELECT c.CustomerID, a.AccountID, a.Username, a.firstName, a.lastName, "
                 + "a.Email, a.AvatarUrl, a.IsActive, c.Address "
-                + "FROM Customers c JOIN Accounts a ON c.AccountID = a.AccountID "
-                + "ORDER BY c.CustomerID DESC "
-                + "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+                + "FROM Customers c JOIN Accounts a ON c.AccountID = a.AccountID WHERE 1=1";
+        if ("active".equals(statusFilter)) {
+            sql += " AND a.IsActive = 1";
+        } else if ("inactive".equals(statusFilter)) {
+            sql += " AND a.IsActive = 0";
+        }
+        if (searchValue != null && !searchValue.trim().isEmpty()) {
+            sql += " AND (a.firstName LIKE ? OR a.lastName LIKE ? OR a.Username LIKE ? OR c.Address LIKE ?)";
+        }
+        sql += " ORDER BY c.CustomerID DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        
         List<Customer> list = new ArrayList<>();
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setInt(1, offset);
-            stmt.setInt(2, limit);
+            int paramIdx = 1;
+            if (searchValue != null && !searchValue.trim().isEmpty()) {
+                String k = "%" + searchValue.trim() + "%";
+                stmt.setString(paramIdx++, k);
+                stmt.setString(paramIdx++, k);
+                stmt.setString(paramIdx++, k);
+                stmt.setString(paramIdx++, k);
+            }
+            stmt.setInt(paramIdx++, offset);
+            stmt.setInt(paramIdx, limit);
+            
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     list.add(map(rs));

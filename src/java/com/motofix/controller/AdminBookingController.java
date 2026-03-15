@@ -13,8 +13,33 @@ public class AdminBookingController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String filter = request.getParameter("filter");
+        if (filter == null || filter.isEmpty()) {
+            filter = "pending"; // Default filter
+        }
+        
+        String searchValue = request.getParameter("value");
+        if (searchValue == null) searchValue = "";
+        
+        String pageStr = request.getParameter("page");
+        int page = 1;
+        int pageSize = 10;
+        if (pageStr != null && !pageStr.isEmpty()) {
+            try {
+                page = Integer.parseInt(pageStr);
+            } catch (NumberFormatException ignored) {}
+        }
+        
         try {
-            request.setAttribute("bookings", bookingDAO.listAll());
+            int totalBookings = bookingDAO.countBookings(filter, searchValue);
+            int totalPages = (int) Math.ceil((double) totalBookings / pageSize);
+            int offset = (page - 1) * pageSize;
+            
+            request.setAttribute("bookings", bookingDAO.listBookingsPaged(filter, searchValue, offset, pageSize));
+            request.setAttribute("currentPage", page);
+            request.setAttribute("totalPages", totalPages);
+            request.setAttribute("currentFilter", filter);
+            request.setAttribute("currentSearch", searchValue);
         } catch (SQLException e) {
             request.setAttribute("error", "Không thể tải danh sách đặt lịch.");
         }
@@ -37,6 +62,24 @@ public class AdminBookingController extends HttpServlet {
                 // ignore and redirect
             }
         }
-        response.sendRedirect(request.getContextPath() + "/admin/bookings");
+        
+        String filter = request.getParameter("filter");
+        String page = request.getParameter("page");
+        String searchValue = request.getParameter("value");
+        
+        String redirectUrl = request.getContextPath() + "/admin/bookings";
+        boolean hasQuery = false;
+        if (filter != null && !filter.isEmpty()) { 
+            redirectUrl += "?filter=" + filter; 
+            hasQuery = true; 
+        }
+        if (searchValue != null && !searchValue.isEmpty()) { 
+            redirectUrl += (hasQuery ? "&" : "?") + "value=" + java.net.URLEncoder.encode(searchValue, "UTF-8"); 
+            hasQuery = true; 
+        }
+        if (page != null && !page.isEmpty()) { 
+            redirectUrl += (hasQuery ? "&" : "?") + "page=" + page; 
+        }
+        response.sendRedirect(redirectUrl);
     }
 }

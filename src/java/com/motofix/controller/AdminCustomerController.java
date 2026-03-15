@@ -25,16 +25,24 @@ public class AdminCustomerController extends HttpServlet {
             } catch (NumberFormatException ignored) {}
         }
 
+        String searchValue = request.getParameter("search");
+        if (searchValue == null) searchValue = "";
+        
+        String filter = request.getParameter("filter");
+        if (filter == null || filter.isEmpty()) filter = "all";
+
         try {
-            int totalCustomers = customerDAO.countAll();
+            int totalCustomers = customerDAO.countAll(searchValue, filter);
             int totalPages = (int) Math.ceil((double) totalCustomers / pageSize);
             int offset = (page - 1) * pageSize;
 
-            List<Customer> customers = customerDAO.listPaged(offset, pageSize);
+            List<Customer> customers = customerDAO.listPaged(searchValue, filter, offset, pageSize);
 
             request.setAttribute("customers", customers);
             request.setAttribute("currentPage", page);
             request.setAttribute("totalPages", totalPages);
+            request.setAttribute("currentSearch", searchValue);
+            request.setAttribute("currentFilter", filter);
         } catch (SQLException e) {
             request.setAttribute("error", "Không thể tải danh sách khách hàng.");
         }

@@ -60,6 +60,92 @@ public class BookingDAO extends DBContext {
             return null;
         }
     }
+    
+    public int countBookings(String filterStatus, String searchValue) throws SQLException {
+        String sql = """
+            SELECT COUNT(*) FROM Bookings b
+            JOIN Customers c on b.CustomerID = c.CustomerID
+            JOIN Accounts a on c.AccountID = a.AccountID
+            LEFT JOIN Vehicles v on v.VehicleID = b.VehicleID
+            WHERE 1=1
+        """;
+        
+        if ("pending".equals(filterStatus)) {
+            sql += " AND b.Status = 'PENDING'";
+        } else if ("processed".equals(filterStatus)) {
+            sql += " AND b.Status IN ('CONFIRMED', 'CANCELLED')";
+        }
+        
+        if (searchValue != null && !searchValue.trim().isEmpty()) {
+            sql += " AND (CONCAT(a.FirstName, ' ', a.LastName) LIKE ? OR a.Username LIKE ? OR v.PlateNumber LIKE ?)";
+        }
+        
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            if (searchValue != null && !searchValue.trim().isEmpty()) {
+                String k = "%" + searchValue.trim() + "%";
+                stmt.setString(1, k);
+                stmt.setString(2, k);
+                stmt.setString(3, k);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) return rs.getInt(1);
+            }
+        }
+        return 0;
+    }
+    
+    public List<Booking> listBookingsPaged(String filterStatus, String searchValue, int offset, int limit) throws SQLException {
+        List<Booking> bookings = new ArrayList<>();
+        String sql = """
+                     select 
+                     b.BookingID, CONCAT(a.lastName, ' ',a.firstName) as FullName, a.Username,
+                     v.PlateNumber, b.BookingDate, b.Status, b.Note
+                     from Bookings as b
+                     join Customers as c on b.CustomerID = c.CustomerID
+                     join Accounts as a on c.AccountID = a.AccountID
+                     left join Vehicles as v on v.VehicleID = b.VehicleID
+                     WHERE 1=1
+                     """;
+                     
+        if ("pending".equals(filterStatus)) {
+            sql += " AND b.Status = 'PENDING'";
+        } else if ("processed".equals(filterStatus)) {
+            sql += " AND b.Status IN ('CONFIRMED', 'CANCELLED')";
+        }
+        
+        if (searchValue != null && !searchValue.trim().isEmpty()) {
+            sql += " AND (CONCAT(a.FirstName, ' ', a.LastName) LIKE ? OR a.Username LIKE ? OR v.PlateNumber LIKE ?)";
+        }
+                     
+        sql += " ORDER BY b.BookingDate DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            int paramIdx = 1;
+            if (searchValue != null && !searchValue.trim().isEmpty()) {
+                String k = "%" + searchValue.trim() + "%";
+                stmt.setString(paramIdx++, k);
+                stmt.setString(paramIdx++, k);
+                stmt.setString(paramIdx++, k);
+            }
+            stmt.setInt(paramIdx++, offset);
+            stmt.setInt(paramIdx, limit);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    int BookingID = rs.getInt("BookingID");
+                    String FullName = rs.getString("FullName");
+                    String Username = rs.getString("Username");
+                    String PlateNumber = rs.getString("PlateNumber");
+                    Timestamp bookingDate = rs.getTimestamp("BookingDate");
+                    String Status = rs.getString("Status");
+                    String Note = rs.getString("Note");
+                    Booking booking = new Booking(BookingID, FullName, Username, PlateNumber, bookingDate, Status, Note);
+                    bookings.add(booking);
+                }
+            }
+        }
+        return bookings;
+    }
 
     public void updateStatus(int bookingId, String status) throws SQLException {
         String sql = "UPDATE Bookings SET Status = ? WHERE BookingID = ?";
