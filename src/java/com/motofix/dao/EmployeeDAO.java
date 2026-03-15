@@ -22,7 +22,7 @@ public class EmployeeDAO extends DBContext {
         e.setSalary(rs.getLong("Salary"));
         Date hireDate = rs.getDate("HireDate");
         e.setHireDate(hireDate != null ? hireDate.toString() : "");
-        e.setActive(rs.getInt("Status"));
+        e.setActive(rs.getInt("Status") == 1);
         return e;
     }
 
@@ -185,7 +185,7 @@ public class EmployeeDAO extends DBContext {
                 acc.setPhone(rs.getString("Phone"));
                 acc.setPosition(rs.getString("Position"));
                 acc.setSalary(rs.getLong("Salary"));
-                acc.setActive(rs.getInt("Status"));
+                acc.setActive(rs.getInt("Status") == 1);
                 return acc;
             }
             else{

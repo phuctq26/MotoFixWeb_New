@@ -63,12 +63,12 @@ public class Employee {
     }
 
     /** Status BIT: true = đang làm, false = đã nghỉ */
-    public int isActive() {
-        return status;
+    public boolean isActive() {
+        return status == 1;
     }
     
-    public void setActive(int v) {
-        this.status = v;
+    public void setActive(boolean v) {
+        this.status = v ? 1 : 0;
     }
 
     public int getStatus() {
