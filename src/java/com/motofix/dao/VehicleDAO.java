@@ -47,7 +47,7 @@ public class VehicleDAO extends DBContext {
                 VALUES
                     (?, ?, ?, ?, GETDATE());
                 """;
-            st = connection.prepareStatement(sql);
+            st = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             st.setInt(1, ownerId);
             st.setString(2, plateNumber);
             st.setString(3, brand);

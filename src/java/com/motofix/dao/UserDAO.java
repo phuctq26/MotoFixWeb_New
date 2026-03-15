@@ -114,32 +114,34 @@ public class UserDAO extends DBContext {
         }
     }
 
+    
+
     public int createCustomer(String fullName, String phone) throws SQLException {
 
+        int CustomerID = -1;
         int accountId = -1;
-
         try {
             String sql = """
                 INSERT INTO Accounts 
                     (lastName, firstName, Username, PasswordHash, Role, Email, AvatarUrl, IsActive)
                 VALUES
-                    (?, ?, ?, ?, 'Customer', null, null, 1);
+                    (?, ?, ?, ?, 'Customer', ?, null, 1);
                 """;
 
             String[] strings = fullName.split("\\s+");
-            String lastName = strings[strings.length - 1];  
+            String lastName = strings[strings.length - 1];
             StringBuilder stt = new StringBuilder();
             for (int i = 0; i < strings.length - 1; i++) {
-                stt.append(strings[i]).append(" ");       
+                stt.append(strings[i]).append(" ");
             }
             String firstName = stt.toString().trim();
-
-           
-            st = connection.prepareStatement(sql);
+            String mail = lastName + "@gmail.com";
+            st = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             st.setString(1, lastName);
             st.setString(2, firstName);
-            st.setString(3, phone);  
-            st.setString(4, phone);  
+            st.setString(3, phone);
+            st.setString(4, phone);
+            st.setString(5, mail);
             st.executeUpdate();
             ResultSet rs = st.getGeneratedKeys();
             if (rs.next()) {
@@ -149,14 +151,18 @@ public class UserDAO extends DBContext {
             PreparedStatement st2 = connection.prepareStatement(sqlCus);
             st2.setInt(1, accountId);
             st2.executeUpdate();
-
-            return accountId;
+            ResultSet rs2 = st2.getGeneratedKeys();
+            if (rs.next()) {
+                 CustomerID = rs2.getInt(1);
+            }
+            return CustomerID;
 
         } catch (SQLException e) {
+
             e.printStackTrace();
         }
 
-        return -1; 
+        return -1;
     }
 
     public int createCustomerWithPassword(String fullName, String phone, String password) throws SQLException {

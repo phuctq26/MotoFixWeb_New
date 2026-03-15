@@ -18,6 +18,40 @@ public class ConsulationDAO extends DBContext {
             String sql = """
                          select c.ConsultationID, c.Name, c.Phone, c.Content, c.CreatedAt, c.Status
                          from Consultation as c
+                         where c.Status = 0
+                         """;
+            st = connection.prepareStatement(sql);
+            // truyen tham so cho cau lenh sql
+            rs = st.executeQuery(); // select
+            while (rs.next()) {
+                int ConsultationID = rs.getInt("ConsultationID");
+                String Name = rs.getString("Name");
+                String Phone = rs.getString("Phone");
+                String Content = rs.getString("Content");
+                Date CreatedAt = rs.getDate("CreatedAt");
+                boolean Status = rs.getBoolean("Status");
+                consulation consu = new consulation(ConsultationID, Name, Phone, Content, CreatedAt, Status);
+                consulations.add(consu);
+            }
+            return consulations;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public List<consulation> getAllConsulations1() {
+        List<consulation> consulations = new ArrayList<>();
+        try {
+            String sql = """
+                         SELECT 
+                             c.ConsultationID, 
+                             c.Name, 
+                             c.Phone, 
+                             c.Content, 
+                             c.CreatedAt, 
+                             c.Status
+                         FROM Consultation AS c
+                         ORDER BY c.Status ASC, c.CreatedAt DESC;
                          """;
             st = connection.prepareStatement(sql);
             // truyen tham so cho cau lenh sql

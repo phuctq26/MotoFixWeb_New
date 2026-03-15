@@ -1,5 +1,6 @@
 <%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ page import="java.util.List,java.text.SimpleDateFormat,com.motofix.model.RepairTicket,com.motofix.model.TicketItem,com.motofix.model.Invoice" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ page import="java.util.List,java.text.SimpleDateFormat,com.motofix.model.RepairTicket,com.motofix.model.TicketItem,com.motofix.model.Invoice,jakarta.servlet.http.HttpServletRequest" %>
 <!doctype html>
 <html lang="vi">
     <head>
@@ -53,10 +54,22 @@
                         </div>
                     </div>
                 </div>
-                                
+
                 <div class="row g-4">
+
                     <div class="col-lg-5">
                         <div class="card p-4 shadow-sm">
+                            
+                            <form action="invoices" method="get">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div class="input-group" style="max-width:360px;">
+                                        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                                        <input name="value"  class="form-control" value="${value}" placeholder="Tìm theo SĐT hoặc biển số xe..." />
+                                    </div>
+                                    <button class="btn btn-outline-secondary"><i class="bi bi-funnel"></i> Lọc</button>
+                                </div>
+                            </form>
+                            
                             <h6 class="fw-bold mb-3"><i class="bi bi-list-ul me-2"></i>Hóa đơn đã thanh toán</h6>
                             <div class="table-responsive">
                                 <table class="table align-middle table-hover">
@@ -74,7 +87,7 @@
                                           if (invoices != null && !invoices.isEmpty()) {
                                             for (Invoice inv : invoices) {
                                         %>
-                                        <tr style="cursor: pointer" onclick="window.location.href='${pageContext.request.contextPath}/admin/invoices?ticketId=<%= inv.getInvoiceID() %>'">
+                                        <tr style="cursor: pointer" onclick="window.location.href = '${pageContext.request.contextPath}/admin/invoices?ticketId=<%= inv.getInvoiceID() %>'">
                                             <td>
                                                 <span class="fw-bold">#<%= inv.getInvoiceID() %></span>
                                                 <div class="small text-muted"><%= inv.getCreatedDate() != null ? fmt.format(inv.getCreatedDate()) : "N/A" %></div>
@@ -96,6 +109,43 @@
                                     </tbody>
                                 </table>
                             </div>
+                            <%
+                                Integer currentPage = (Integer) request.getAttribute("currentPage");
+                                Integer totalPages = (Integer) request.getAttribute("totalPages");
+                                String value = request.getParameter("value");
+                                String ticketIdParam = request.getParameter("ticketId");
+                                if (currentPage == null) currentPage = 1;
+                                if (totalPages == null) totalPages = 1;
+
+                                String encodedValue = "";
+                                if (value != null && !value.isBlank()) {
+                                    try {
+                                        encodedValue = java.net.URLEncoder.encode(value, "UTF-8");
+                                    } catch (java.io.UnsupportedEncodingException ignored) {
+                                        encodedValue = value;
+                                    }
+                                }
+                            %>
+                            <% if (totalPages > 1) { %>
+                            <nav aria-label="Page navigation" class="mt-3">
+                              <ul class="pagination justify-content-center mb-0">
+                                <li class="page-item <%= currentPage <= 1 ? "disabled" : "" %>">
+                                  <a class="page-link" href="<%= ((HttpServletRequest) request).getContextPath() %>/admin/invoices?page=<%= currentPage-1 %><%= value != null && !value.isBlank() ? "&value=" + encodedValue : "" %><%= ticketIdParam != null ? "&ticketId=" + ticketIdParam : "" %>">Trước</a>
+                                </li>
+                                <% int start = Math.max(1, currentPage - 2);
+                                   int end = Math.min(totalPages, currentPage + 2);
+                                   for (int p = start; p <= end; p++) { %>
+                                  <li class="page-item <%= p == currentPage ? "active" : "" %>">
+                                    <a class="page-link" href="<%= ((HttpServletRequest) request).getContextPath() %>/admin/invoices?page=<%= p %><%= value != null && !value.isBlank() ? "&value=" + encodedValue : "" %><%= ticketIdParam != null ? "&ticketId=" + ticketIdParam : "" %>"><%= p %></a>
+                                  </li>
+                                <% } %>
+                                <li class="page-item <%= currentPage >= totalPages ? "disabled" : "" %>">
+                                  <a class="page-link" href="<%= ((HttpServletRequest) request).getContextPath() %>/admin/invoices?page=<%= currentPage+1 %><%= value != null && !value.isBlank() ? "&value=" + encodedValue : "" %><%= ticketIdParam != null ? "&ticketId=" + ticketIdParam : "" %>">Sau</a>
+                                </li>
+                              </ul>
+                            </nav>
+                            <% } %>
+
                         </div>
                     </div>
 
@@ -120,7 +170,7 @@
                                     <span class="badge bg-success">ĐÃ THANH TOÁN</span>
                                 </div>
                             </div>
-                            
+
                             <div class="row mb-4">
                                 <div class="col-6">
                                     <small class="text-muted d-block text-uppercase">Khách hàng</small>

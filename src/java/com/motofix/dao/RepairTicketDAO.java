@@ -36,7 +36,6 @@ public class RepairTicketDAO extends DBContext {
             + "JOIN Vehicles v ON t.VehicleID = v.VehicleID ";
 
     // ── CRUD ──────────────────────────────────────────────────────────────────
-   
     public int create(int customerId, int vehicleId, String diagnosis) throws SQLException {
         int ticketID = -1;
 
@@ -63,6 +62,44 @@ public class RepairTicketDAO extends DBContext {
             e.printStackTrace();
         }
 
+        return -1;
+    }
+
+    public int createCustomer(String fullName, String phone) throws SQLException {
+        int accountId = -1;
+        int customerId = -1; // Thêm biến này
+
+        try {
+            // 1. Chèn vào Accounts
+            String sql = "INSERT INTO Accounts (lastName, firstName, Username, PasswordHash, Role, Email, IsActive) VALUES (?, ?, ?, ?, 'Customer', ?, 1)";
+
+            // ... (đoạn xử lý tách tên giữ nguyên) ...
+            st = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            // ... (set tham số) ...
+            st.executeUpdate();
+
+            ResultSet rs = st.getGeneratedKeys();
+            if (rs.next()) {
+                accountId = rs.getInt(1);
+            }
+
+            // 2. Chèn vào Customers và LẤY CustomerID
+            String sqlCus = "INSERT INTO Customers (AccountID, Address) VALUES (?, '')";
+            // Sử dụng RETURN_GENERATED_KEYS ở đây
+            PreparedStatement st2 = connection.prepareStatement(sqlCus, Statement.RETURN_GENERATED_KEYS);
+            st2.setInt(1, accountId);
+            st2.executeUpdate();
+
+            ResultSet rsCus = st2.getGeneratedKeys();
+            if (rsCus.next()) {
+                customerId = rsCus.getInt(1); // Lấy ID của bảng Customers
+            }
+
+            return customerId; // TRẢ VỀ CustomerID, KHÔNG PHẢI accountId
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return -1;
     }
 
@@ -291,7 +328,7 @@ public class RepairTicketDAO extends DBContext {
     }
 
     public int countPaidInvoices() throws SQLException {
-        String sql = "SELECT COUNT(*) FROM RepairTickets WHERE PaymentStatus='PAID'";
+        String sql = "SELECT COUNT(*) FROM RepairOrders WHERE Status = 'COMPLETED'";
         try (PreparedStatement stmt = connection.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
             if (rs.next()) {
                 return rs.getInt(1);
@@ -365,6 +402,90 @@ public class RepairTicketDAO extends DBContext {
             throw e;
         }
         return lists;
+    }
+
+    public List<RepairTicket> listRecentInvoices(int pageIndex, int pageSize) throws SQLException {
+        List<RepairTicket> lists = new ArrayList<>();
+        // Sử dụng Text Block (Java 15+)
+        String sql = """
+            WITH OrderCosts AS (
+                SELECT
+                    OrderID,
+                    SUM(TotalPrice) AS ComputedTotal
+                FROM (
+                    SELECT OrderID, TotalPrice FROM RepairServiceDetails
+                    UNION ALL
+                    SELECT OrderID, TotalPrice FROM RepairPartDetails
+                ) AS CombinedDetails
+                GROUP BY OrderID
+            )
+            SELECT
+                r.OrderID,
+                r.Status,
+                CONCAT(a.firstName, ' ', a.lastName) AS CustomerName,
+                v.PlateNumber,
+                e.FullName AS EmployeeName,
+                i.PaymentStatus,
+                ISNULL(i.Discount, 0) AS Discount,
+                i.CreatedDate,
+                -- Quan trọng: Đặt tên bí danh rõ ràng để Java gọi đúng
+                ISNULL(oc.ComputedTotal, 0) AS ComputedTotalAmount,
+                (ISNULL(oc.ComputedTotal, 0) - ISNULL(i.Discount, 0)) AS CalculatedFinalAmount
+            FROM RepairOrders r
+            JOIN Customers c ON r.CustomerID = c.CustomerID
+            JOIN Accounts a ON c.AccountID = a.AccountID
+            JOIN Vehicles v ON r.VehicleID = v.VehicleID
+            LEFT JOIN Employees e ON r.EmployeeID = e.EmployeeID
+            LEFT JOIN Invoices i ON r.OrderID = i.OrderID
+            LEFT JOIN OrderCosts oc ON r.OrderID = oc.OrderID
+            WHERE r.Status = 'COMPLETED'
+            ORDER BY r.CompletedAt DESC
+            OFFSET ? ROWS FETCH NEXT ? ROWS ONLY;
+            """;
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, (pageIndex - 1) * pageSize);
+            stmt.setInt(2, pageSize);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    RepairTicket ticket = new RepairTicket();
+
+                    ticket.setTicketId(rs.getInt("OrderID"));
+                    ticket.setCustomerName(rs.getString("CustomerName"));
+                    ticket.setPlateNumber(rs.getString("PlateNumber"));
+                    ticket.setStatus(rs.getString("Status"));
+                    ticket.setPaymentStatus(rs.getString("PaymentStatus"));
+
+                    ticket.setTotalAmount(rs.getDouble("ComputedTotalAmount"));
+                    ticket.setDiscount(rs.getDouble("Discount"));
+
+                    ticket.setFinalAmount(rs.getDouble("CalculatedFinalAmount"));
+
+                    ticket.setCreatedAt(rs.getTimestamp("CreatedDate"));
+                    ticket.setEmployeeName(rs.getString("EmployeeName"));
+
+                    lists.add(ticket);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi SQL: " + e.getMessage());
+            throw e;
+        }
+        return lists;
+    }
+
+    public int countRecentInvoices() throws SQLException {
+        String sql = """
+            SELECT COUNT(*)
+            FROM RepairOrders r
+            WHERE r.Status = 'COMPLETED'
+            """;
+        try (PreparedStatement stmt = connection.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return 0;
     }
 
     public Invoice getDataForInvoice(int orderId) throws SQLException {
@@ -505,7 +626,6 @@ public class RepairTicketDAO extends DBContext {
 //            return null;
 //        }
 //    }
-
     public int findByIdForEmployee(int ticketId) {
         int id;
         try {
@@ -561,5 +681,70 @@ public class RepairTicketDAO extends DBContext {
         } catch (SQLException e) {
 
         }
+    }
+
+    public List<RepairTicket> getTodayRepairOrders() {
+        List<RepairTicket> list = new ArrayList<>();
+        String sql = """
+                 SELECT top 5
+                     ro.OrderID AS TicketID,
+                     'TK' + CAST(ro.OrderID AS VARCHAR) AS TicketCode,
+                     acc.firstName + ' ' + acc.lastName AS CustomerName,
+                     e.FullName AS EmployeeName,
+                     e.EmployeeID,
+                     ro.Status,
+                     COALESCE(i.PaymentStatus, 'UNPAID') AS PaymentStatus,
+                     COALESCE(i.TotalAmount, 0) AS TotalAmount,
+                     COALESCE(i.Discount, 0) AS Discount,
+                     COALESCE(i.FinalAmount, 0) AS FinalAmount,
+                     COALESCE(i.PaymentMethod, 'CASH') AS PaymentMethod,
+                     v.PlateNumber,
+                     ro.CreatedAt
+                 FROM RepairOrders ro
+                 JOIN Vehicles v ON ro.VehicleID = v.VehicleID
+                 JOIN Customers c ON ro.CustomerID = c.CustomerID
+                 JOIN Accounts acc ON c.AccountID = acc.AccountID
+                 LEFT JOIN Employees e ON ro.EmployeeID = e.EmployeeID
+                 LEFT JOIN Invoices i ON ro.OrderID = i.OrderID
+                 WHERE CAST(ro.CreatedAt AS DATE) = CAST(GETDATE() AS DATE)
+                 ORDER BY ro.CreatedAt DESC;
+                 """;
+
+        try {
+            st = connection.prepareStatement(sql);
+            rs = st.executeQuery();
+
+            while (rs.next()) {
+                RepairTicket ticket = new RepairTicket();
+
+                ticket.setTicketId(rs.getInt("TicketID"));
+                ticket.setTicketCode(rs.getString("TicketCode"));
+                ticket.setCustomerName(rs.getNString("CustomerName"));
+
+                String empName = rs.getNString("EmployeeName");
+                ticket.setEmployeeName(empName != null ? empName : "Chưa phân công");
+
+                ticket.setEmployeeID(rs.getString("EmployeeID"));
+                ticket.setPlateNumber(rs.getString("PlateNumber"));
+                ticket.setStatus(rs.getString("Status"));
+                ticket.setPaymentStatus(rs.getString("PaymentStatus"));
+
+                ticket.setTotalAmount(rs.getDouble("TotalAmount"));
+                ticket.setDiscount(rs.getDouble("Discount"));
+                ticket.setFinalAmount(rs.getDouble("FinalAmount"));
+                ticket.setPaymentMethod(rs.getString("PaymentMethod"));
+
+                ticket.setCreatedAt(rs.getTimestamp("CreatedAt"));
+
+                list.add(ticket);
+            }
+            System.out.println("DEBUG: Da lay duoc " + list.size() + " phieu hom nay.");
+
+        } catch (Exception e) {
+            System.err.println("Lỗi tại getTodayRepairOrders: " + e.getMessage());
+            e.printStackTrace();
+        } 
+        
+        return list;
     }
 }

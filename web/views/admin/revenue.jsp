@@ -49,13 +49,13 @@
 
                                 <c:forEach var="tiem" items="${recentInvoices}">
                                     <c:if test="${tiem.paymentStatus != 'PAID'}">
-                                    <%
-                                        RepairTicket currentTicket = (RepairTicket) pageContext.getAttribute("tiem");
-                                        long qrAmount = (long) currentTicket.getFinalAmount();
-                                        String qrInfo = "Thanh toan hoa don TK " + currentTicket.getTicketId();
-                                        String qrLink = VietQrUtil.generateQrLink(qrAmount, qrInfo);
-                                        pageContext.setAttribute("qrLinkCode", qrLink);
-                                    %>
+                                        <%
+                                            RepairTicket currentTicket = (RepairTicket) pageContext.getAttribute("tiem");
+                                            long qrAmount = (long) currentTicket.getFinalAmount();
+                                            String qrInfo = "Thanh toan hoa don TK " + currentTicket.getTicketId();
+                                            String qrLink = VietQrUtil.generateQrLink(qrAmount, qrInfo);
+                                            pageContext.setAttribute("qrLinkCode", qrLink);
+                                        %>
                                     </c:if>
                                     <tr>
                                         <td>TK-${tiem.ticketId}</td>
@@ -76,7 +76,7 @@
                                                     <button type="button" class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#qrModal${tiem.ticketId}">
                                                         Mã QR
                                                     </button>
-                                                    
+
                                                     <button name="action" value="pay" class="btn btn-sm btn-primary">
                                                         Thanh Toán
                                                     </button>
@@ -87,7 +87,7 @@
                                                     <i class="bi bi-arrow-left-circle"></i>
                                                 </button>
                                             </form>
-                                            
+
                                             <c:if test="${tiem.paymentStatus != 'PAID'}">
                                                 <!-- Modal QR Code -->
                                                 <div class="modal fade text-start" id="qrModal${tiem.ticketId}" tabindex="-1">
@@ -123,6 +123,25 @@
                             </tbody>
                         </table>
                     </div>
+                    <c:if test="${totalPages > 1}">
+                        <nav aria-label="Page navigation" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item ${currentPage == 1 ? 'disabled' : ''}">
+                                    <a class="page-link" href="?page=${currentPage - 1}">Trước</a>
+                                </li>
+
+                                <c:forEach begin="1" end="${totalPages}" var="i">
+                                    <li class="page-item ${currentPage == i ? 'active' : ''}">
+                                        <a class="page-link" href="?page=${i}">${i}</a>
+                                    </li>
+                                </c:forEach>
+
+                                <li class="page-item ${currentPage == totalPages ? 'disabled' : ''}">
+                                    <a class="page-link" href="?page=${currentPage + 1}">Sau</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </c:if>
                 </div>
 
                 <%@ include file="_footer.jspf" %>

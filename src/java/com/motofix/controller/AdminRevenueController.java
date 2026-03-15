@@ -17,8 +17,30 @@ public class AdminRevenueController extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        int pageSize = 10;
+        int page = 1;
+        String pageParam = request.getParameter("page");
+        if (pageParam != null) {
+            try {
+                page = Integer.parseInt(pageParam);
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
         try {
-            request.setAttribute("recentInvoices", repairTicketDAO.listRecentInvoices());
+            int totalInvoices = repairTicketDAO.countRecentInvoices();
+            int totalPages = totalInvoices > 0 ? (int) Math.ceil(totalInvoices / (double) pageSize) : 1;
+            if (page < 1) {
+                page = 1;
+            } else if (page > totalPages) {
+                page = totalPages;
+            }
+
+            request.setAttribute("recentInvoices", repairTicketDAO.listRecentInvoices(page, pageSize));
+            request.setAttribute("currentPage", page);
+            request.setAttribute("totalPages", totalPages);
+            request.setAttribute("totalInvoices", totalInvoices);
+            request.setAttribute("pageSize", pageSize);
         } catch (SQLException e) {
             e.printStackTrace();
             request.setAttribute("error", "Không thể tải dữ liệu doanh thu: " + e.getMessage());
@@ -54,12 +76,20 @@ public class AdminRevenueController extends HttpServlet {
                 ticketDAO.updateStatus(Integer.parseInt(id), "IN_PROGRESS");
             }
 
-            request.setAttribute("recentInvoices", repairTicketDAO.listRecentInvoices());
+            // Sau khi xử lý action, redirect về trang hiện tại với page
+            int page = 1;
+            String pageParam = request.getParameter("page");
+            if (pageParam != null) {
+                try {
+                    page = Integer.parseInt(pageParam);
+                } catch (NumberFormatException ignored) {
+                }
+            }
+            response.sendRedirect(request.getContextPath() + "/admin/revenue?page=" + page);
         } catch (SQLException e) {
             e.printStackTrace();
             request.setAttribute("error", "Không thể tải dữ liệu doanh thu: " + e.getMessage());
+            doGet(request, response);
         }
-        request.getRequestDispatcher("/views/admin/revenue.jsp").forward(request, response);
-
     }
 }

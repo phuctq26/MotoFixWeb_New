@@ -67,13 +67,13 @@ public class AdminConsulationController extends HttpServlet {
         List<consulation> consulations;
 
         if (status == null) {
-            consulations = consulDAO.getAllConsulations();
+            consulations = consulDAO.getAllConsulations1();
         } else if (status.equals("pending")) {
             consulations = consulDAO.getByStatus(false);
         } else if (status.equals("done")) {
             consulations = consulDAO.getByStatus(true);
         } else {
-            consulations = consulDAO.getAllConsulations();
+            consulations = consulDAO.getAllConsulations1();
         }
 
         request.setAttribute("consulations", consulations);

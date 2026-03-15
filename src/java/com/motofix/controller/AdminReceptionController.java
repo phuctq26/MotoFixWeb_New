@@ -12,6 +12,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.PrintWriter;
 
 public class AdminReceptionController extends HttpServlet {
 
@@ -22,6 +23,7 @@ public class AdminReceptionController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        request.setAttribute("todayOrders", ticketDAO.getTodayRepairOrders());
         request.getRequestDispatcher("/views/admin/reception.jsp").forward(request, response);
     }
 
@@ -59,15 +61,17 @@ public class AdminReceptionController extends HttpServlet {
 
         Integer bookingVehicleId = vehicleDAO.getVehicleFromBooking(customer.getUserId());
         request.setAttribute("bookingVehicleId", bookingVehicleId);
+        
+        request.setAttribute("searchedPhone", customer.getPhone());
     }
 
     private void handleCreateTicketCombined(HttpServletRequest request) throws SQLException {
         String customerType = request.getParameter("customerType"); // "existing" or "new"
         int customerId;
-
         // 1. Determine Customer
         if ("existing".equals(customerType)) {
             customerId = Integer.parseInt(request.getParameter("customerId"));
+            
         } else {
             String fullName = request.getParameter("fullName");
             String phone = request.getParameter("phone");
@@ -99,7 +103,6 @@ public class AdminReceptionController extends HttpServlet {
         request.setAttribute("message", "Đã tiếp nhận xe thành công! Mã phiếu: TK-" + ticketId);
         request.setAttribute("ticketId", ticketId);
 
-        // Reset search state to avoid showing forms again
-        request.removeAttribute("searchedPhone");
+        
     }
 }
