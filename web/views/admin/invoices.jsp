@@ -114,7 +114,7 @@
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <div>
                                     <h5 class="fw-bold mb-1 text-uppercase">Chi tiết hóa đơn</h5>
-                                    <span class="badge bg-primary">Phiếu sửa chữa: #<%= ticket.getTicketId() %></span>
+                                    <span class="badge bg-primary">Phiếu sửa chữa:#<%= ticket.getTicketId() %></span>
                                 </div>
                                 <div class="text-end">
                                     <span class="badge bg-success">ĐÃ THANH TOÁN</span>

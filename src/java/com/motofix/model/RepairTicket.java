@@ -9,6 +9,7 @@ public class RepairTicket {
     private String customerName;
     private String employeeName;
     private String employeeID;
+    
 
     public String getEmployeeID() {
         return employeeID;
@@ -130,4 +131,7 @@ public class RepairTicket {
     public void setCreatedAt(Timestamp createdAt) {
         this.createdAt = createdAt;
     }
+
+    
+    
 }

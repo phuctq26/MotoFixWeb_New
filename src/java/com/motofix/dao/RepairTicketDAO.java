@@ -36,6 +36,7 @@ public class RepairTicketDAO extends DBContext {
             + "JOIN Vehicles v ON t.VehicleID = v.VehicleID ";
 
     // ── CRUD ──────────────────────────────────────────────────────────────────
+   
     public int create(int customerId, int vehicleId, String diagnosis) throws SQLException {
         int ticketID = -1;
 
@@ -45,7 +46,7 @@ public class RepairTicketDAO extends DBContext {
                     (BookingID, CustomerID, VehicleID, EmployeeID, CurrentOdometer, Diagnosis, Note, Status, CreatedAt, CompletedAt)
                     VALUES (NULL, ?, ?, NULL, NULL, ?, NULL, 'RECEIVED', GETDATE(), NULL)
                 """;
-            st = connection.prepareStatement(sql);
+            st = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             st.setInt(1, customerId);
             st.setInt(2, vehicleId);
             st.setString(3, diagnosis);

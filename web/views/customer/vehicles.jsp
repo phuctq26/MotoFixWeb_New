@@ -38,7 +38,7 @@
                     <th>Mã phiếu</th>
                     <th>Biển số</th>
                     <th>Trạng thái</th>
-                    <th class="text-end">Thao tác</th>
+                    <th class="text-end">Ghi chú</th>
                   </tr>
                 </thead>
                 <tbody>

@@ -92,7 +92,7 @@ public class AdminReceptionController extends HttpServlet {
         String diagnosis = request.getParameter("diagnosis");
         int ticketId = ticketDAO.create(customerId, vehicleId, diagnosis);
 
-        // 4. Set attributes for success view
+        // 4. Set attributes for success view 
         User customer = userDAO.findById(customerId);
         request.setAttribute("customer", customer);
         request.setAttribute("vehicles", vehicleDAO.listByOwner(customerId));
