@@ -29,18 +29,19 @@ public class UserDAO extends DBContext {
         try {
             String sql = """
             select 
-                a.AccountID,
-                CONCAT(a.lastName, ' ', a.firstName) as FullName,
-                a.Username,
-                a.PasswordHash,
-                a.Role,
-                c.Address,
-                a.Email,
-                a.AvatarUrl,
-                a.IsActive
-            from Accounts a
-            join Customers c on a.AccountID = c.AccountID
-            where a.Username = ?
+                            a.AccountID,
+                            c.CustomerID,
+                            CONCAT(a.lastName, ' ', a.firstName) as FullName,
+                            a.Username,
+                            a.PasswordHash,
+                            a.Role,
+                            c.Address,
+                            a.Email,
+                            a.AvatarUrl,
+                            a.IsActive
+                        from Accounts a
+                        join Customers c on a.AccountID = c.AccountID
+                        where a.Username = ?
         """;
 
             st = connection.prepareStatement(sql);
@@ -49,7 +50,7 @@ public class UserDAO extends DBContext {
             rs = st.executeQuery();
 
             if (rs.next()) {
-                int accountId = rs.getInt("AccountID");
+                int accountId = rs.getInt("CustomerID");
                 String fullName = rs.getString("FullName");
                 String phoneNumber = rs.getString("Username");
                 String passwordHash = rs.getString("PasswordHash");
@@ -145,13 +146,19 @@ public class UserDAO extends DBContext {
             if (rs.next()) {
                 accountId = rs.getInt(1);
             }
-            String sqlCus = "INSERT INTO Customers (AccountID, Address) VALUES (?, '')";
-            PreparedStatement st2 = connection.prepareStatement(sqlCus);
-            st2.setInt(1, accountId);
-            st2.executeUpdate();
-            ResultSet rs2 = st2.getGeneratedKeys();
-            if (rs.next()) {
-                CustomerID = rs2.getInt(1);
+
+            if (accountId != -1) {
+                String sqlCus = "INSERT INTO Customers (AccountID, Address) VALUES (?, '')";
+                // CHỖ SỬA 1: Thêm Statement.RETURN_GENERATED_KEYS
+                PreparedStatement st2 = connection.prepareStatement(sqlCus, Statement.RETURN_GENERATED_KEYS);
+                st2.setInt(1, accountId);
+                st2.executeUpdate();
+
+                // CHỖ SỬA 2: Lấy ID từ st2
+                ResultSet rs2 = st2.getGeneratedKeys();
+                if (rs2.next()) {
+                    CustomerID = rs2.getInt(1); // Đây mới là ID thật của Customer
+                }
             }
             return CustomerID;
 
@@ -317,29 +324,29 @@ public class UserDAO extends DBContext {
 
     public void updateProfile(int userId, String fullName, String phone, String address) throws SQLException {
 
-    // update account
-    String sqlAccount = "UPDATE Accounts SET firstName = ?, Username = ? WHERE AccountID = ?";
+        // update account
+        String sqlAccount = "UPDATE Accounts SET firstName = ?, Username = ? WHERE AccountID = ?";
 
-    try (PreparedStatement stmt = connection.prepareStatement(sqlAccount)) {
+        try (PreparedStatement stmt = connection.prepareStatement(sqlAccount)) {
 
-        stmt.setString(1, fullName);
-        stmt.setString(2, phone);
-        stmt.setInt(3, userId);
+            stmt.setString(1, fullName);
+            stmt.setString(2, phone);
+            stmt.setInt(3, userId);
 
-        stmt.executeUpdate();
+            stmt.executeUpdate();
+        }
+
+        // update address
+        String sqlCustomer = "UPDATE Customers SET Address = ? WHERE AccountID = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sqlCustomer)) {
+
+            stmt.setString(1, address);
+            stmt.setInt(2, userId);
+
+            stmt.executeUpdate();
+        }
     }
-
-    // update address
-    String sqlCustomer = "UPDATE Customers SET Address = ? WHERE AccountID = ?";
-
-    try (PreparedStatement stmt = connection.prepareStatement(sqlCustomer)) {
-
-        stmt.setString(1, address);
-        stmt.setInt(2, userId);
-
-        stmt.executeUpdate();
-    }
-}
 
     public void changePassword(int userId, String newPassword) throws SQLException {
 
