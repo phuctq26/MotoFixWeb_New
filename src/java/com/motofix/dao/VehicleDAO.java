@@ -79,7 +79,7 @@ public class VehicleDAO extends DBContext {
                          from Vehicles v
                          join Customers c on v.CustomerID = c.CustomerID
                          join Accounts a on a.AccountID = c.AccountID
-                         where a.AccountID = ?
+                         where c.CustomerID = ?
                          
                          union
                          
@@ -93,7 +93,7 @@ public class VehicleDAO extends DBContext {
                          join Vehicles v on b.VehicleID = v.VehicleID
                          join Customers c on b.CustomerID = c.CustomerID
                          join Accounts a on a.AccountID = c.AccountID
-                         where a.AccountID = ?
+                         where c.CustomerID = ?
                            and b.Status = 'CONFIRMED';
                          """;
             st = connection.prepareStatement(sql);
