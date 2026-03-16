@@ -139,31 +139,8 @@ public class PageController extends HttpServlet {
 
                 break;
 
-            // ================= HISTORY =================
-            case "/history":
-
-                User userHistory = (User) request.getSession().getAttribute("user");
-
-                if (userHistory == null) {
-                    response.sendRedirect(request.getContextPath() + "/login");
-                    return;
-                }
-
-                try {
-
-                    int customerId = userDAO.getCustomerIdByAccountId(userHistory.getUserId());
-
-                    request.setAttribute("tickets",
-                            repairTicketDAO.listByCustomer(customerId));
-
-                } catch (SQLException e) {
-                    request.setAttribute("error", "Không thể tải lịch sử sửa chữa.");
-                }
-
-                request.getRequestDispatcher("/views/customer/history.jsp")
-                        .forward(request, response);
-
-                break;
+            // ================= HISTORY ================= ĐÃ XÓA
+            
 
             // ================= INVOICES =================
             case "/invoices":
