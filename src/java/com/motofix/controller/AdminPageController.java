@@ -36,6 +36,10 @@ public class AdminPageController extends HttpServlet {
                 request.setAttribute("vehiclePending", bookingDao.getVehiclePending());
                 request.setAttribute("newUser", userDao.getNewUserToday());
                 request.setAttribute("recentActivities", actiDao.getRecentActivities());
+                
+                request.setAttribute("chartLabels", invoiceDao.getRevenueLabelsLast7Days().toString());
+                request.setAttribute("chartData", invoiceDao.getRevenueDataLast7Days().toString());
+                
                 request.getRequestDispatcher("/views/admin/dashboard.jsp").forward(request, response);
                 break;
             case "/admin/consultations":

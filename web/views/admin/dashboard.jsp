@@ -1,10 +1,11 @@
-﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <!doctype html>
 <html lang="vi">
     <head>
         <title>Dashboard | MotoFix Admin</title>
         <%@ include file="_head.jspf" %>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     </head>
     <body>
         <div class="layout">
@@ -64,8 +65,8 @@
                 <div class="row g-4 mt-1">
                     <div class="col-lg-7">
                         <div class="card p-4">
-                            <h6 class="fw-bold mb-3">Biểu đồ doanh thu tuần</h6>
-                            <div class="chart-placeholder"></div>
+                            <h6 class="fw-bold mb-3">Biểu đồ doanh thu tuần (7 ngày)</h6>
+                            <canvas id="revenueChart" height="120"></canvas>
                         </div>
                     </div>
                     <div class="col-lg-5">
@@ -101,5 +102,55 @@
                 <%@ include file="_footer.jspf" %>
             </main>
         </div>
+        
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const ctx = document.getElementById('revenueChart').getContext('2d');
+                
+                const labels = ${chartLabels};
+                const data = ${chartData};
+                
+                new Chart(ctx, {
+                    type: 'line', 
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Doanh thu (VNĐ)',
+                            data: data,
+                            backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.3,
+                            pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                            pointRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: { 
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        if (value >= 1000000) {
+                                            return (value / 1000000) + ' Tr';
+                                        } else if (value >= 1000) {
+                                            return (value / 1000) + ' k';
+                                        }
+                                        return value;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+        </script>
     </body>
 </html>

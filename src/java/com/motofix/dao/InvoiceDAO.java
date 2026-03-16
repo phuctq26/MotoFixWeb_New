@@ -89,6 +89,58 @@ public class InvoiceDAO extends DBContext {
         }
     }
 
+    public List<String> getRevenueLabelsLast7Days() {
+        List<String> labels = new ArrayList<>();
+        try {
+            String sql = """
+                WITH Last7Days AS (
+                    SELECT CAST(GETDATE() AS DATE) AS d
+                    UNION ALL
+                    SELECT DATEADD(day, -1, d) FROM Last7Days WHERE d > DATEADD(day, -6, CAST(GETDATE() AS DATE))
+                )
+                SELECT CONVERT(varchar(5), d, 103) AS Label
+                FROM Last7Days
+                ORDER BY d ASC
+            """;
+            st = connection.prepareStatement(sql);
+            rs = st.executeQuery();
+            while (rs.next()) {
+                labels.add("'" + rs.getString("Label") + "'");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return labels;
+    }
+
+    public List<Double> getRevenueDataLast7Days() {
+        List<Double> data = new ArrayList<>();
+        try {
+            String sql = """
+                WITH Last7Days AS (
+                    SELECT CAST(GETDATE() AS DATE) AS d
+                    UNION ALL
+                    SELECT DATEADD(day, -1, d) FROM Last7Days WHERE d > DATEADD(day, -6, CAST(GETDATE() AS DATE))
+                )
+                SELECT ISNULL(SUM(i.FinalAmount), 0) AS Revenue
+                FROM Last7Days a
+                LEFT JOIN Invoices i 
+                    ON CAST(i.CreatedDate AS DATE) = a.d AND i.PaymentStatus = 'PAID'
+                GROUP BY a.d
+                ORDER BY a.d ASC
+            """;
+            st = connection.prepareStatement(sql);
+            rs = st.executeQuery();
+            while (rs.next()) {
+                data.add(rs.getDouble("Revenue"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return data;
+    }
+
+
     public List<Invoice> getAllInvoices(String value) {
         List<Invoice> accs = new ArrayList<>();
         try {
