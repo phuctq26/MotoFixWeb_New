@@ -5,9 +5,11 @@
 package com.motofix.dao;
 
 import com.motofix.model.Invoice;
+import com.motofix.model.RevenueSummary;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -418,6 +420,45 @@ public class InvoiceDAO extends DBContext {
             return -1;
         }
         return -1;
+    }
+    /**
+     * Get revenue summary (total revenue, invoice count, avg order value) for a date range.
+     * If startDate or endDate is null, returns all-time summary.
+     */
+    public RevenueSummary getRevenueSummary(LocalDate startDate, LocalDate endDate) {
+        RevenueSummary summary = new RevenueSummary();
+        try {
+            String sql;
+            if (startDate != null && endDate != null) {
+                sql = """
+                    SELECT ISNULL(SUM(FinalAmount), 0) AS TotalRevenue,
+                           COUNT(InvoiceID) AS TotalInvoices,
+                           ISNULL(AVG(FinalAmount), 0) AS AvgOrderValue
+                    FROM Invoices
+                    WHERE CreatedDate >= ? AND CreatedDate < ?
+                """;
+                st = connection.prepareStatement(sql);
+                st.setDate(1, java.sql.Date.valueOf(startDate));
+                st.setDate(2, java.sql.Date.valueOf(endDate));
+            } else {
+                sql = """
+                    SELECT ISNULL(SUM(FinalAmount), 0) AS TotalRevenue,
+                           COUNT(InvoiceID) AS TotalInvoices,
+                           ISNULL(AVG(FinalAmount), 0) AS AvgOrderValue
+                    FROM Invoices
+                """;
+                st = connection.prepareStatement(sql);
+            }
+            rs = st.executeQuery();
+            if (rs.next()) {
+                summary.setTotalRevenue(rs.getDouble("TotalRevenue"));
+                summary.setTotalInvoices(rs.getInt("TotalInvoices"));
+                summary.setAverageOrderValue(rs.getDouble("AvgOrderValue"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return summary;
     }
 
 }

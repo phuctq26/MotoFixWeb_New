@@ -19,6 +19,8 @@
                 <div class="alert alert-danger"><%= request.getAttribute("error") %></div>
                 <% } %>
 
+<%@ page import="com.motofix.model.RevenueSummary" %>
+
                 <div class="row g-3 mb-3">
                     <div class="col-md-4">
                         <div class="card stat-card">
@@ -54,6 +56,74 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Revenue Date Range Filter -->
+                <div class="card p-3 mb-3 shadow-sm">
+                    <form action="invoices" method="get" id="revenueFilterForm">
+                        <div class="d-flex flex-wrap align-items-end gap-2">
+                            <div>
+                                <label class="form-label fw-semibold mb-1 small"><i class="bi bi-funnel me-1"></i>Lọc doanh thu theo</label>
+                                <select name="filterType" id="filterTypeSelect" class="form-select form-select-sm" style="min-width:160px;" onchange="onFilterChange()">
+                                    <option value="this_month" ${filterType == 'this_month' ? 'selected' : ''}>Tháng này</option>
+                                    <option value="last_month" ${filterType == 'last_month' ? 'selected' : ''}>Tháng trước</option>
+                                    <option value="this_year" ${filterType == 'this_year' ? 'selected' : ''}>Năm nay</option>
+                                    <option value="last_year" ${filterType == 'last_year' ? 'selected' : ''}>Năm trước</option>
+                                    <option value="custom" ${filterType == 'custom' ? 'selected' : ''}>Tùy chỉnh...</option>
+                                </select>
+                            </div>
+                            <div id="customDateRange" style="display: ${filterType == 'custom' ? 'flex' : 'none'};" class="align-items-end gap-2">
+                                <div>
+                                    <label class="form-label mb-1 small">Từ ngày</label>
+                                    <input type="date" name="startDate" id="startDateInput" class="form-control form-control-sm" value="${customStartDate}" />
+                                </div>
+                                <div>
+                                    <label class="form-label mb-1 small">Đến ngày</label>
+                                    <input type="date" name="endDate" id="endDateInput" class="form-control form-control-sm" value="${customEndDate}" />
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-bar-chart me-1"></i>Xem thống kê</button>
+                        </div>
+                    </form>
+
+                    <%
+                        RevenueSummary revSummary = (RevenueSummary) request.getAttribute("revenueSummary");
+                        if (revSummary != null) {
+                    %>
+                    <div class="row g-3 mt-2">
+                        <div class="col-md-4">
+                            <div class="border rounded p-2 text-center bg-light">
+                                <div class="text-muted small">Doanh thu lọc</div>
+                                <div class="fw-bold text-primary fs-6"><%= String.format("%,.0f", revSummary.getTotalRevenue()) %>đ</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="border rounded p-2 text-center bg-light">
+                                <div class="text-muted small">Số hóa đơn</div>
+                                <div class="fw-bold text-success fs-6"><%= revSummary.getTotalInvoices() %></div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="border rounded p-2 text-center bg-light">
+                                <div class="text-muted small">Trung bình/đơn</div>
+                                <div class="fw-bold text-info fs-6"><%= String.format("%,.0f", revSummary.getAverageOrderValue()) %>đ</div>
+                            </div>
+                        </div>
+                    </div>
+                    <% } %>
+                </div>
+
+                <script>
+                function onFilterChange() {
+                    var sel = document.getElementById('filterTypeSelect');
+                    var customDiv = document.getElementById('customDateRange');
+                    if (sel.value === 'custom') {
+                        customDiv.style.display = 'flex';
+                    } else {
+                        customDiv.style.display = 'none';
+                        document.getElementById('revenueFilterForm').submit();
+                    }
+                }
+                </script>
 
                 <div class="row g-4">
 
