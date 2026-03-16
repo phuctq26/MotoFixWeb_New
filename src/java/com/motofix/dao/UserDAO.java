@@ -201,7 +201,7 @@ public class UserDAO extends DBContext {
 
     public User authenticate(String username, String password) throws SQLException {
         String sql = "SELECT AccountID, Username, firstName, lastName, PasswordHash, Role, Email, IsActive "
-                + "FROM Accounts WHERE Username = ?";
+                + "FROM Accounts WHERE Username = ? AND IsActive = 1";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, username);
             try (ResultSet rs = stmt.executeQuery()) {
