@@ -124,6 +124,7 @@ public class AdminRepairController extends HttpServlet {
                 if ("IN_PROGRESS".equals(status)) {
 
                     employDao.updateStatus(empId, 1);
+                    request.getSession().setAttribute("statusForJSP", "IN_PROGRESS");
                     ticketDAO.assignEmployee(ticketId, empId);
                 } else if ("COMPLETED".equals(status)) {
 

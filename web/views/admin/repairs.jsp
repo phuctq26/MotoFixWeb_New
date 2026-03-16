@@ -147,7 +147,7 @@
                                 <input type="hidden" name="ticketId" value="<%= ticket.getTicketId() %>" />
                                 <label class="form-label">Chọn nhân viên:</label>
                                 <select class="form-select" name="employee"
-                                       
+
                                         <c:if test="${ticket.status eq 'IN_PROGRESS'}">disabled</c:if>>
 
                                         <c:forEach var="item" items="${employees}">
@@ -169,10 +169,15 @@
                                 <input type="hidden" name="ticketId" value="<%= ticket.getTicketId() %>" />
                                 <label class="form-label">Cập nhật trạng thái</label>
                                 <select class="form-select" name="status">
+                                    <option value="${ticket.status}" selected>${ticket.status}</option>
 
-                                    <option value="IN_PROGRESS" <%= "IN_PROGRESS".equalsIgnoreCase(ticket.getStatus()) ? "selected" : "" %>>IN_PROGRESS</option>
+                                    <c:if test="${ticket.status eq 'IN_PROGRESS'}">
+                                        <option value="COMPLETED">COMPLETED</option>
+                                    </c:if>
 
-                                    <option value="COMPLETED" <%= "COMPLETED".equalsIgnoreCase(ticket.getStatus()) ? "selected" : "" %>>COMPLETED</option>
+                                    <c:if test="${ticket.status eq 'RECEIVED'}">
+                                        <option value="IN_PROGRESS">IN_PROGRESS</option>
+                                    </c:if>
                                 </select>
 
 

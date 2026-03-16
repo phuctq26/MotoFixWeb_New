@@ -59,7 +59,7 @@
 
                     <div class="col-lg-5">
                         <div class="card p-4 shadow-sm">
-                            
+
                             <form action="invoices" method="get">
                                 <div class="d-flex justify-content-between align-items-center mb-3">
                                     <div class="input-group" style="max-width:360px;">
@@ -69,7 +69,7 @@
                                     <button class="btn btn-outline-secondary"><i class="bi bi-funnel"></i> Lọc</button>
                                 </div>
                             </form>
-                            
+
                             <h6 class="fw-bold mb-3"><i class="bi bi-list-ul me-2"></i>Hóa đơn đã thanh toán</h6>
                             <div class="table-responsive">
                                 <table class="table align-middle table-hover">
@@ -87,8 +87,7 @@
                                           if (invoices != null && !invoices.isEmpty()) {
                                             for (Invoice inv : invoices) {
                                         %>
-                                        <tr style="cursor: pointer" onclick="window.location.href = '${pageContext.request.contextPath}/admin/invoices?ticketId=<%= inv.getInvoiceID() %>'">
-                                            <td>
+                                        <tr style="cursor: pointer" onclick="window.location.href = '${pageContext.request.contextPath}/admin/invoices?ticketId=<%= inv.getOrderID() %>'">                                            <td>
                                                 <span class="fw-bold">#<%= inv.getInvoiceID() %></span>
                                                 <div class="small text-muted"><%= inv.getCreatedDate() != null ? fmt.format(inv.getCreatedDate()) : "N/A" %></div>
                                             </td>
@@ -128,21 +127,21 @@
                             %>
                             <% if (totalPages > 1) { %>
                             <nav aria-label="Page navigation" class="mt-3">
-                              <ul class="pagination justify-content-center mb-0">
-                                <li class="page-item <%= currentPage <= 1 ? "disabled" : "" %>">
-                                  <a class="page-link" href="<%= ((HttpServletRequest) request).getContextPath() %>/admin/invoices?page=<%= currentPage-1 %><%= value != null && !value.isBlank() ? "&value=" + encodedValue : "" %><%= ticketIdParam != null ? "&ticketId=" + ticketIdParam : "" %>">Trước</a>
-                                </li>
-                                <% int start = Math.max(1, currentPage - 2);
-                                   int end = Math.min(totalPages, currentPage + 2);
-                                   for (int p = start; p <= end; p++) { %>
-                                  <li class="page-item <%= p == currentPage ? "active" : "" %>">
-                                    <a class="page-link" href="<%= ((HttpServletRequest) request).getContextPath() %>/admin/invoices?page=<%= p %><%= value != null && !value.isBlank() ? "&value=" + encodedValue : "" %><%= ticketIdParam != null ? "&ticketId=" + ticketIdParam : "" %>"><%= p %></a>
-                                  </li>
-                                <% } %>
-                                <li class="page-item <%= currentPage >= totalPages ? "disabled" : "" %>">
-                                  <a class="page-link" href="<%= ((HttpServletRequest) request).getContextPath() %>/admin/invoices?page=<%= currentPage+1 %><%= value != null && !value.isBlank() ? "&value=" + encodedValue : "" %><%= ticketIdParam != null ? "&ticketId=" + ticketIdParam : "" %>">Sau</a>
-                                </li>
-                              </ul>
+                                <ul class="pagination justify-content-center mb-0">
+                                    <li class="page-item <%= currentPage <= 1 ? "disabled" : "" %>">
+                                        <a class="page-link" href="<%= ((HttpServletRequest) request).getContextPath() %>/admin/invoices?page=<%= currentPage-1 %><%= value != null && !value.isBlank() ? "&value=" + encodedValue : "" %><%= ticketIdParam != null ? "&ticketId=" + ticketIdParam : "" %>">Trước</a>
+                                    </li>
+                                    <% int start = Math.max(1, currentPage - 2);
+                                       int end = Math.min(totalPages, currentPage + 2);
+                                       for (int p = start; p <= end; p++) { %>
+                                    <li class="page-item <%= p == currentPage ? "active" : "" %>">
+                                        <a class="page-link" href="<%= ((HttpServletRequest) request).getContextPath() %>/admin/invoices?page=<%= p %><%= value != null && !value.isBlank() ? "&value=" + encodedValue : "" %><%= ticketIdParam != null ? "&ticketId=" + ticketIdParam : "" %>"><%= p %></a>
+                                    </li>
+                                    <% } %>
+                                    <li class="page-item <%= currentPage >= totalPages ? "disabled" : "" %>">
+                                        <a class="page-link" href="<%= ((HttpServletRequest) request).getContextPath() %>/admin/invoices?page=<%= currentPage+1 %><%= value != null && !value.isBlank() ? "&value=" + encodedValue : "" %><%= ticketIdParam != null ? "&ticketId=" + ticketIdParam : "" %>">Sau</a>
+                                    </li>
+                                </ul>
                             </nav>
                             <% } %>
 
