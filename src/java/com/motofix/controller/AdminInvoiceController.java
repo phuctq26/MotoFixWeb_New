@@ -4,8 +4,11 @@ import com.motofix.dao.InvoiceDAO;
 import com.motofix.dao.RepairTicketDAO;
 import com.motofix.dao.TicketItemDAO;
 import com.motofix.model.RepairTicket;
+import com.motofix.model.RevenueSummary;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.YearMonth;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,6 +35,55 @@ public class AdminInvoiceController extends HttpServlet {
             }
         }
 
+        // --- Revenue Date Range Filter Logic ---
+        String filterType = request.getParameter("filterType");
+        String customStart = request.getParameter("startDate");
+        String customEnd = request.getParameter("endDate");
+
+        if (filterType == null || filterType.isEmpty()) {
+            filterType = "this_month";
+        }
+
+        LocalDate startDate;
+        LocalDate endDate;
+        LocalDate today = LocalDate.now();
+
+        switch (filterType) {
+            case "last_month":
+                YearMonth lastMonth = YearMonth.from(today).minusMonths(1);
+                startDate = lastMonth.atDay(1);
+                endDate = lastMonth.atEndOfMonth().plusDays(1);
+                break;
+            case "this_year":
+                startDate = today.withDayOfYear(1);
+                endDate = today.withDayOfYear(1).plusYears(1);
+                break;
+            case "last_year":
+                startDate = today.minusYears(1).withDayOfYear(1);
+                endDate = today.withDayOfYear(1);
+                break;
+            case "custom":
+                try {
+                    startDate = LocalDate.parse(customStart);
+                    endDate = LocalDate.parse(customEnd).plusDays(1); // inclusive end
+                } catch (Exception e) {
+                    // fallback to this_month on invalid dates
+                    filterType = "this_month";
+                    YearMonth cm = YearMonth.from(today);
+                    startDate = cm.atDay(1);
+                    endDate = cm.atEndOfMonth().plusDays(1);
+                }
+                break;
+            default: // this_month
+                filterType = "this_month";
+                YearMonth currentMonth = YearMonth.from(today);
+                startDate = currentMonth.atDay(1);
+                endDate = currentMonth.atEndOfMonth().plusDays(1);
+                break;
+        }
+
+        RevenueSummary summary = invoiceDao.getRevenueSummary(startDate, endDate);
+
         try {
             int totalInvoices = (value != null && !value.isBlank())
                     ? invoiceDao.getInvoicesCount(value)
@@ -51,9 +103,17 @@ public class AdminInvoiceController extends HttpServlet {
             request.setAttribute("pageSize", pageSize);
             request.setAttribute("totalInvoices", totalInvoices);
             request.setAttribute("value", value);
+
+            // Existing static summary cards
             request.setAttribute("revenueMonth", invoiceDao.getRevenueMonth());
             request.setAttribute("invoiceCount", invoiceDao.getInvoiceCount());
             request.setAttribute("revenueToday", invoiceDao.getRevenueToday());
+
+            // Dynamic filtered summary
+            request.setAttribute("revenueSummary", summary);
+            request.setAttribute("filterType", filterType);
+            request.setAttribute("customStartDate", customStart);
+            request.setAttribute("customEndDate", customEnd);
 
             if (idParam != null) {
                 int ticketId = Integer.parseInt(idParam);
