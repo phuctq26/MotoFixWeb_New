@@ -2,6 +2,7 @@ package com.motofix.controller;
 
 import com.motofix.dao.RepairTicketDAO;
 import com.motofix.dao.TicketItemDAO;
+import com.motofix.dao.ServiceDAO;
 import com.motofix.model.User;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -13,6 +14,7 @@ import jakarta.servlet.http.HttpServletResponse;
 public class PageController extends HttpServlet {
     private final RepairTicketDAO repairTicketDAO = new RepairTicketDAO();
     private final TicketItemDAO ticketItemDAO = new TicketItemDAO();
+    private final ServiceDAO serviceDAO = new ServiceDAO();
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -20,6 +22,11 @@ public class PageController extends HttpServlet {
         String path = request.getServletPath();
         switch (path) {
             case "/home":
+                try {
+                    request.setAttribute("topServices", serviceDAO.listTop4());
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
                 request.getRequestDispatcher("/views/customer/home.jsp").forward(request, response);
                 break;
             case "/booking":

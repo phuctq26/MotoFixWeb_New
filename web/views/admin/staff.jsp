@@ -91,9 +91,7 @@
                       <label class="form-label fw-semibold">Chức vụ <span class="text-danger">*</span></label>
                       <select class="form-select" name="position" required>
                         <option value="" disabled ${empty fPosition ? 'selected' : ''}>-- Chọn chức vụ --</option>
-                        <option value="Kỹ thuật trưởng" ${'Kỹ thuật trưởng' == fPosition ? 'selected' : ''}>Kỹ thuật trưởng</option>
-                        <option value="Thợ chính"       ${'Thợ chính'       == fPosition ? 'selected' : ''}>Thợ chính</option>
-                        <option value="Thợ phụ"         ${'Thợ phụ'         == fPosition ? 'selected' : ''}>Thợ phụ</option>
+                        <option value="Kỹ thuật viên" ${'Kỹ thuật viên' == fPosition ? 'selected' : ''}>Kỹ thuật viên</option>
                         <option value="Thu ngân"        ${'Thu ngân'        == fPosition ? 'selected' : ''}>Thu ngân</option>
                         <option value="Tiếp tân"        ${'Tiếp tân'        == fPosition ? 'selected' : ''}>Tiếp tân</option>
                       </select>

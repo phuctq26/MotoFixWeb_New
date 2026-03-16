@@ -1,4 +1,6 @@
-﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <!doctype html>
 <html lang="vi">
 <head>
@@ -33,38 +35,25 @@
         <p class="text-muted">Các gói dịch vụ được khách hàng tin dùng nhất tại MotoFix</p>
       </div>
       <div class="row g-4">
-        <div class="col-md-3">
-          <div class="service-card">
-            <div class="icon"><i class="bi bi-droplet"></i></div>
-            <h6 class="fw-bold">Thay nhớt chính hãng</h6>
-            <p class="text-muted small">Các loại nhớt Castrol, Motul, Shell.</p>
-            <div class="badge-price">150.000đ</div>
+        <c:forEach var="s" items="${topServices}" varStatus="loop">
+          <div class="col-md-3">
+            <div class="service-card">
+              <div class="icon">
+                <c:choose>
+                  <c:when test="${loop.index == 0}"><i class="bi bi-droplet"></i></c:when>
+                  <c:when test="${loop.index == 1}"><i class="bi bi-circle"></i></c:when>
+                  <c:when test="${loop.index == 2}"><i class="bi bi-gear"></i></c:when>
+                  <c:otherwise><i class="bi bi-battery-charging"></i></c:otherwise>
+                </c:choose>
+              </div>
+              <h6 class="fw-bold"><c:out value="${s.serviceName}"/></h6>
+              <p class="text-muted small"><c:out value="${s.description}"/></p>
+              <div class="badge-price">
+                <fmt:formatNumber value="${s.price}" type="number"/>đ
+              </div>
+            </div>
           </div>
-        </div>
-        <div class="col-md-3">
-          <div class="service-card">
-            <div class="icon"><i class="bi bi-circle"></i></div>
-            <h6 class="fw-bold">Kiểm tra phanh</h6>
-            <p class="text-muted small">Bảo dưỡng hệ thống phanh ABS.</p>
-            <div class="badge-price">100.000đ</div>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="service-card">
-            <div class="icon"><i class="bi bi-gear"></i></div>
-            <h6 class="fw-bold">Bảo dưỡng toàn bộ</h6>
-            <p class="text-muted small">Kiểm tra và bảo dưỡng 30+ hạng mục.</p>
-            <div class="badge-price">350.000đ</div>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="service-card">
-            <div class="icon"><i class="bi bi-battery-charging"></i></div>
-            <h6 class="fw-bold">Thay bình ắc quy</h6>
-            <p class="text-muted small">Ắc quy GS, Globe chính hãng.</p>
-            <div class="badge-price">450.000đ</div>
-          </div>
-        </div>
+        </c:forEach>
       </div>
     </div>
   </section>

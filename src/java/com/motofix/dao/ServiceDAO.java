@@ -44,6 +44,18 @@ public class ServiceDAO extends DBContext {
         return services;
     }
 
+    public List<Service> listTop4() throws SQLException {
+        List<Service> services = new ArrayList<>();
+        String sql = "SELECT TOP 4 * FROM Services WHERE IsActive = 1 ORDER BY ServiceID ASC";
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                services.add(map(rs));
+            }
+        }
+        return services;
+    }
+
     public int countAll(String searchValue) throws SQLException {
         String sql = "SELECT COUNT(*) FROM Services";
         if (searchValue != null && !searchValue.trim().isEmpty()) {
