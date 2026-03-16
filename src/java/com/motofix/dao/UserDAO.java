@@ -317,17 +317,29 @@ public class UserDAO extends DBContext {
 
     public void updateProfile(int userId, String fullName, String phone, String address) throws SQLException {
 
-        String sql = "UPDATE Accounts SET firstName = ?, Username = ? WHERE AccountID = ?";
+    // update account
+    String sqlAccount = "UPDATE Accounts SET firstName = ?, Username = ? WHERE AccountID = ?";
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+    try (PreparedStatement stmt = connection.prepareStatement(sqlAccount)) {
 
-            stmt.setString(1, fullName);
-            stmt.setString(2, phone);
-            stmt.setInt(3, userId);
+        stmt.setString(1, fullName);
+        stmt.setString(2, phone);
+        stmt.setInt(3, userId);
 
-            stmt.executeUpdate();
-        }
+        stmt.executeUpdate();
     }
+
+    // update address
+    String sqlCustomer = "UPDATE Customers SET Address = ? WHERE AccountID = ?";
+
+    try (PreparedStatement stmt = connection.prepareStatement(sqlCustomer)) {
+
+        stmt.setString(1, address);
+        stmt.setInt(2, userId);
+
+        stmt.executeUpdate();
+    }
+}
 
     public void changePassword(int userId, String newPassword) throws SQLException {
 
