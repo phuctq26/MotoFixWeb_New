@@ -1,6 +1,12 @@
 package com.motofix.controller;
 
+import com.motofix.dao.ActivityDAO;
+import com.motofix.dao.BookingDAO;
 import com.motofix.dao.ConsulationDAO;
+import com.motofix.dao.InvoiceDAO;
+import com.motofix.dao.RepairTicketDAO;
+import com.motofix.dao.TicketItemDAO;
+import com.motofix.dao.UserDAO;
 import com.motofix.model.consulation;
 import java.io.IOException;
 import jakarta.servlet.ServletException;
@@ -11,12 +17,25 @@ import java.util.List;
 
 public class AdminPageController extends HttpServlet {
 
+    private final RepairTicketDAO repairTicketDAO = new RepairTicketDAO();
+    private final TicketItemDAO itemDAO = new TicketItemDAO();
+    private final InvoiceDAO invoiceDao = new InvoiceDAO();
+    private final BookingDAO bookingDao = new BookingDAO();
+    private final UserDAO userDao = new UserDAO();
+    private final ActivityDAO actiDao = new ActivityDAO();
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String path = request.getServletPath();
         switch (path) {
             case "/admin/dashboard":
+                request.setAttribute("revenueMonth", invoiceDao.getRevenueMonth());
+                request.setAttribute("invoiceCount", invoiceDao.getInvoiceCount());
+                request.setAttribute("revenueToday", invoiceDao.getRevenueToday());
+                request.setAttribute("vehicleInprogress", repairTicketDAO.getNumberVehicleInprogress());
+                request.setAttribute("vehiclePending", bookingDao.getVehiclePending());
+                request.setAttribute("newUser", userDao.getNewUserToday());
+                request.setAttribute("recentActivities", actiDao.getRecentActivities());
                 request.getRequestDispatcher("/views/admin/dashboard.jsp").forward(request, response);
                 break;
             case "/admin/consultations":

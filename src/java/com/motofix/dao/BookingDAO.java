@@ -197,4 +197,25 @@ public class BookingDAO extends DBContext {
             return null;
         }
     }
+
+    public int getVehiclePending() {
+        try {
+            String sql = """
+                            SELECT COUNT(*) AS TotalPending
+                            FROM Bookings
+                            WHERE Status = 'PENDING';
+                         """;
+            st = connection.prepareStatement(sql);
+            // truyen tham so cho cau lenh sql
+
+            rs = st.executeQuery();
+            if (rs.next()) {
+                int SoLuongHoaDon = rs.getInt("TotalPending");
+                return SoLuongHoaDon;
+            }
+        } catch (Exception e) {
+            return -1;
+        }
+        return -1;
+    }
 }

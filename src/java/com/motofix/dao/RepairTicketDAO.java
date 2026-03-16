@@ -743,8 +743,29 @@ public class RepairTicketDAO extends DBContext {
         } catch (Exception e) {
             System.err.println("Lỗi tại getTodayRepairOrders: " + e.getMessage());
             e.printStackTrace();
-        } 
-        
+        }
+
         return list;
+    }
+
+    public int getNumberVehicleInprogress() {
+        try {
+            String sql = """
+                            SELECT COUNT(*) AS TotalInProgress
+                                FROM RepairOrders
+                                WHERE Status = 'IN_PROGRESS';
+                         """;
+            st = connection.prepareStatement(sql);
+            // truyen tham so cho cau lenh sql
+
+            rs = st.executeQuery();
+            if (rs.next()) {
+                int SoLuongHoaDon = rs.getInt("TotalInProgress");
+                return SoLuongHoaDon;
+            }
+        } catch (Exception e) {
+            return -1;
+        }
+        return -1;
     }
 }

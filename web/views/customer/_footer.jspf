@@ -21,8 +21,9 @@
       <div class="col-lg-4">
         <h6>Thông tin liên hệ</h6>
         <div class="d-flex flex-column gap-2">
-          <span><i class="bi bi-geo-alt"></i> 123 Nguyễn Văn Linh, Quận 7, TP. Hồ Chí Minh</span>
-          <span><i class="bi bi-telephone"></i> 090 123 4567</span>
+          <span><i class="bi bi-geo-alt"></i> Khu Giáo dục và Đào tạo - Khu Công nghệ cao Hòa Lạc, 
+                                Km29 Đại lộ Thăng Long, Thạch Thất, Hà Nội</span>
+          <span><i class="bi bi-telephone"></i> 0123 456 789</span>
           <span><i class="bi bi-envelope"></i> contact@motofix.vn</span>
         </div>
       </div>

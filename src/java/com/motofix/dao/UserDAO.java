@@ -114,8 +114,6 @@ public class UserDAO extends DBContext {
         }
     }
 
-    
-
     public int createCustomer(String fullName, String phone) throws SQLException {
 
         int CustomerID = -1;
@@ -153,7 +151,7 @@ public class UserDAO extends DBContext {
             st2.executeUpdate();
             ResultSet rs2 = st2.getGeneratedKeys();
             if (rs.next()) {
-                 CustomerID = rs2.getInt(1);
+                CustomerID = rs2.getInt(1);
             }
             return CustomerID;
 
@@ -383,5 +381,26 @@ public class UserDAO extends DBContext {
             stmt.setInt(1, param);
             stmt.executeUpdate();
         }
+    }
+
+    public int getNewUserToday() {
+        try {
+            String sql = """
+                            SELECT COUNT(*) AS TotalNewAccounts
+                                FROM Accounts
+                                WHERE CAST(CreatedAt AS DATE) = CAST(GETDATE() AS DATE);
+                         """;
+            st = connection.prepareStatement(sql);
+            // truyen tham so cho cau lenh sql
+
+            rs = st.executeQuery();
+            if (rs.next()) {
+                int SoLuongHoaDon = rs.getInt("TotalNewAccounts");
+                return SoLuongHoaDon;
+            }
+        } catch (Exception e) {
+            return -1;
+        }
+        return -1;
     }
 }
