@@ -28,12 +28,25 @@ public class RepairTicketDAO extends DBContext {
         return t;
     }
 
-    private static final String BASE_SELECT = "SELECT t.TicketID, t.TicketCode, t.Status, t.PaymentStatus, "
-            + "t.FinalAmount, t.TotalAmount, t.Discount, "
-            + "u.FullName, u.Phone, v.PlateNumber, t.CreatedAt "
-            + "FROM RepairTickets t "
-            + "JOIN Users u ON t.CustomerID = u.UserID "
-            + "JOIN Vehicles v ON t.VehicleID = v.VehicleID ";
+    private static final String BASE_SELECT = """
+    SELECT 
+        r.OrderID AS TicketID,
+        'RO-' + CAST(r.OrderID AS VARCHAR) AS TicketCode,
+        r.Status,
+        COALESCE(i.PaymentStatus,'UNPAID') AS PaymentStatus,
+        COALESCE(i.FinalAmount,0) AS FinalAmount,
+        COALESCE(i.TotalAmount,0) AS TotalAmount,
+        COALESCE(i.Discount,0) AS Discount,
+        a.firstName + ' ' + a.lastName AS FullName,
+        a.Username AS Phone,
+        v.PlateNumber,
+        r.CreatedAt
+    FROM RepairOrders r
+    JOIN Customers c ON r.CustomerID = c.CustomerID
+    JOIN Accounts a ON c.AccountID = a.AccountID
+    JOIN Vehicles v ON r.VehicleID = v.VehicleID
+    LEFT JOIN Invoices i ON r.OrderID = i.OrderID
+""";
 
     // ── CRUD ──────────────────────────────────────────────────────────────────
     public int create(int customerId, int vehicleId, String diagnosis) throws SQLException {
@@ -150,7 +163,7 @@ public class RepairTicketDAO extends DBContext {
     }
 
     public List<RepairTicket> listByCustomer(int customerId) throws SQLException {
-        String sql = BASE_SELECT + "WHERE t.CustomerID = ? ORDER BY t.CreatedAt DESC";
+        String sql = BASE_SELECT + "WHERE r.CustomerID = ? ORDER BY r.CreatedAt DESC";
         List<RepairTicket> items = new ArrayList<>();
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, customerId);
@@ -165,7 +178,7 @@ public class RepairTicketDAO extends DBContext {
 
     public List<RepairTicket> listPaidByCustomer(int customerId) throws SQLException {
         String sql = BASE_SELECT
-                + "WHERE t.CustomerID = ? AND t.PaymentStatus = 'PAID' ORDER BY t.CreatedAt DESC";
+                + "WHERE r.CustomerID = ? AND i.PaymentStatus = 'PAID' ORDER BY r.CreatedAt DESC";
         List<RepairTicket> items = new ArrayList<>();
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, customerId);
@@ -180,7 +193,7 @@ public class RepairTicketDAO extends DBContext {
 
     public List<RepairTicket> listPaidAll() throws SQLException {
         String sql = BASE_SELECT
-                + "WHERE t.PaymentStatus = 'PAID' ORDER BY t.CreatedAt DESC";
+                + "WHERE i.PaymentStatus = 'PAID' ORDER BY r.CreatedAt DESC";
         List<RepairTicket> items = new ArrayList<>();
         try (PreparedStatement stmt = connection.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
@@ -192,7 +205,7 @@ public class RepairTicketDAO extends DBContext {
 
     public List<RepairTicket> listForCheckout() throws SQLException {
         String sql = BASE_SELECT
-                + "WHERE t.PaymentStatus = 'UNPAID' ORDER BY t.CreatedAt DESC";
+                + "WHERE i.PaymentStatus = 'UNPAID' ORDER BY r.CreatedAt DESC";
         List<RepairTicket> items = new ArrayList<>();
         try (PreparedStatement stmt = connection.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
@@ -244,7 +257,7 @@ public class RepairTicketDAO extends DBContext {
     }
 
     public RepairTicket findByIdForCustomer(int ticketId, int customerId) throws SQLException {
-        String sql = BASE_SELECT + "WHERE t.TicketID = ? AND t.CustomerID = ?";
+        String sql = BASE_SELECT + "WHERE r.OrderID = ? AND r.CustomerID = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, ticketId);
             stmt.setInt(2, customerId);
@@ -295,8 +308,8 @@ public class RepairTicketDAO extends DBContext {
     }
 
     public void markPaid(int ticketId, String method) throws SQLException {
-        String sql = "UPDATE RepairTickets SET PaymentStatus = 'PAID', PaymentMethod = ?, "
-                + "PaidAt = GETDATE(), Status = 'COMPLETED' WHERE TicketID = ?";
+        String sql = "UPDATE Invoices SET PaymentStatus = 'PAID', PaymentMethod = ?, "
+                + "PaidAt = GETDATE(), Status = 'COMPLETED' WHERE OrderID = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, method);
             stmt.setInt(2, ticketId);
@@ -306,7 +319,7 @@ public class RepairTicketDAO extends DBContext {
 
     // ── Revenue stats ─────────────────────────────────────────────────────────
     public double getRevenueThisMonth() throws SQLException {
-        String sql = "SELECT ISNULL(SUM(FinalAmount),0) FROM RepairTickets "
+        String sql = "SELECT ISNULL(SUM(FinalAmount),0) FROM Invoices "
                 + "WHERE PaymentStatus='PAID' AND MONTH(PaidAt)=MONTH(GETDATE()) AND YEAR(PaidAt)=YEAR(GETDATE())";
         try (PreparedStatement stmt = connection.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
             if (rs.next()) {
@@ -317,7 +330,7 @@ public class RepairTicketDAO extends DBContext {
     }
 
     public double getRevenueToday() throws SQLException {
-        String sql = "SELECT ISNULL(SUM(FinalAmount),0) FROM RepairTickets "
+        String sql = "SELECT ISNULL(SUM(FinalAmount),0) FROM Invoices    "
                 + "WHERE PaymentStatus='PAID' AND CAST(PaidAt AS DATE)=CAST(GETDATE() AS DATE)";
         try (PreparedStatement stmt = connection.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
             if (rs.next()) {
@@ -631,7 +644,7 @@ public class RepairTicketDAO extends DBContext {
         try {
             String sql = """
                             select EmployeeID from RepairOrders
-                                                        where OrderID = 1
+                                                        where OrderID = ?
                          """;
             st = connection.prepareStatement(sql);
             // truyen tham so cho cau lenh sql

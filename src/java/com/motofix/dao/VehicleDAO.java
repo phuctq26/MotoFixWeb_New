@@ -118,22 +118,31 @@ public class VehicleDAO extends DBContext {
         }
     }
 
-    public Integer getVehicleFromBooking(int userId) {
-        String sql = """
-                     SELECT VehicleID
-                     FROM Bookings
-                     WHERE CustomerID = ? AND Status = 'Confirmed' ORDER BY BookingID DESC
-                     """;
-        try {
-            st.setInt(1, userId);
-            ResultSet rs = st.executeQuery();
-            if (rs.next()) {
-                int v = rs.getInt("VehicleID");
-                return rs.wasNull() ? null : v;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+    public Integer getVehicleFromBooking(int customerId) {
+
+    String sql = """
+        SELECT VehicleID
+        FROM Bookings
+        WHERE CustomerID = ?
+        ORDER BY BookingID DESC
+    """;
+
+    try {
+        st = connection.prepareStatement(sql);
+
+        st.setInt(1, customerId);
+
+        ResultSet rs = st.executeQuery();
+
+        if (rs.next()) {
+            int v = rs.getInt("VehicleID");
+            return rs.wasNull() ? null : v;
         }
-        return null;
+
+    } catch (Exception e) {
+        e.printStackTrace();
     }
+
+    return null;
+ }
 }
