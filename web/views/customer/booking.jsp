@@ -19,6 +19,18 @@
   <section class="py-5">
     <div class="container">
       <div class="form-card">
+        <%-- Kiểm tra nếu chưa đăng nhập --%>
+    <% if (session.getAttribute("user") == null) { %>
+        <div class="text-center py-5">
+            <h4 class="fw-bold text-warning mb-3">Yêu cầu đăng nhập</h4>
+            <p class="text-muted">Bạn cần đăng nhập vào tài khoản để sử dụng dịch vụ đặt lịch sửa chữa.</p>
+            <div class="mt-4">
+                <a href="${pageContext.request.contextPath}/login" class="btn btn-primary px-4 me-2">Đăng nhập</a>
+                <a href="${pageContext.request.contextPath}/register" class="btn btn-outline-secondary px-4">Đăng ký</a>
+            </div>
+        </div>
+    <% } else { %>
+        <%-- Đã đăng nhập -> Hiển thị form --%>
         <h4 class="text-center fw-bold text-primary mb-4">Thông tin đặt lịch</h4>
 
         <% if (request.getAttribute("success") != null) { %>
@@ -32,11 +44,11 @@
           <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label">Họ và tên</label>
-              <input class="form-control" name="fullName" value="${sessionScope.user.fullName}" placeholder="Nguyễn Văn A" required />
+              <input class="form-control" name="fullName" value="${sessionScope.user.fullName}" placeholder="Nguyễn Văn A" required readonly/>
             </div>
             <div class="col-md-6">
               <label class="form-label">Số điện thoại</label>
-              <input class="form-control" name="phone" value="${sessionScope.user.phone}" placeholder="0901234567" required />
+              <input class="form-control" name="phone" value="${sessionScope.user.phone}" placeholder="0901234567" required readonly/>
             </div>
           </div>
 
@@ -122,6 +134,7 @@
           </div>
           <button class="btn btn-primary w-100 mt-4">Xác nhận đặt lịch</button>
         </form>
+            <% } %>
       </div>
     </div>
   </section>

@@ -14,6 +14,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 public class PageController extends HttpServlet {
 
@@ -26,6 +27,15 @@ public class PageController extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        
+        if (session != null && session.getAttribute("user") != null) {
+            User currentUser = (User) session.getAttribute("user");
+            if (currentUser.getRole() != null && currentUser.getRole().toString().equalsIgnoreCase("ADMIN")) {
+                response.sendRedirect(request.getContextPath() + "/admin/dashboard");
+                return; 
+            }
+        }
 
         String path = request.getServletPath();
 

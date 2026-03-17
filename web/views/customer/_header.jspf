@@ -35,7 +35,6 @@ if (activeMenu == null) { activeMenu = ""; }
               <li><h6 class="dropdown-header">Xin chào, ${sessionScope.user.fullName}</h6></li>
               <li><a class="dropdown-item" href="${pageContext.request.contextPath}/profile"><i class="bi bi-person"></i> Thông tin cá nhân</a></li>
               <li><a class="dropdown-item" href="${pageContext.request.contextPath}/vehicles"><i class="bi bi-bicycle"></i> Xe &amp; tiến độ</a></li>
-              <li><a class="dropdown-item" href="${pageContext.request.contextPath}/history"><i class="bi bi-clock-history"></i> Lịch sử sửa chữa</a></li>
               <li><a class="dropdown-item" href="${pageContext.request.contextPath}/invoices"><i class="bi bi-receipt"></i> Hóa đơn &amp; thanh toán</a></li>
               <li><a class="dropdown-item" href="${pageContext.request.contextPath}/change-password"><i class="bi bi-key"></i> Đổi mật khẩu</a></li>
               <li><hr class="dropdown-divider"></li>

@@ -50,7 +50,7 @@
             <form class="mt-4" method="post" action="${pageContext.request.contextPath}/login">
               <div class="mb-3">
                 <label class="form-label">Tên đăng nhập</label>
-                <input type="text" name="username" class="form-control" placeholder="admin_motofix" required>
+                <input type="text" name="username" class="form-control" placeholder="Tài khoản" required>
               </div>
               <div class="mb-3">
                 <label class="form-label">Mật khẩu</label>

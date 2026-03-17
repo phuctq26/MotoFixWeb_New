@@ -12,7 +12,7 @@
     <body>
         <div class="layout">
             <% request.setAttribute("activeMenu","revenue"); %>
-            <% request.setAttribute("pageTitle","Lịch sử hóa đơn & doanh thu"); %>
+            <% request.setAttribute("pageTitle","Danh sách thanh toán"); %>
             <%@ include file="_sidebar.jspf" %>
             <main class="content">
                 <%@ include file="_topbar.jspf" %>

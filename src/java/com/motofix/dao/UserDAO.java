@@ -114,6 +114,49 @@ public class UserDAO extends DBContext {
             return null;
         }
     }
+    public User findByIdToChangePassword(int userId) throws SQLException {
+        try {
+            String sql = """
+            select 
+                            a.AccountID,
+                            CONCAT(a.lastName, ' ', a.firstName) as FullName,
+                            a.Username,
+                            a.PasswordHash,
+                            a.Role,
+                            c.Address,
+                            a.Email,
+                            a.AvatarUrl,
+                            a.IsActive
+                        from Accounts a
+                        join Customers c on a.AccountID = c.AccountID
+                        where a.AccountID = ?
+        """;
+
+            st = connection.prepareStatement(sql);
+            st.setInt(1, userId);
+
+            rs = st.executeQuery();
+
+            if (rs.next()) {
+                int accountId = rs.getInt("AccountID");
+                String fullName = rs.getString("FullName");
+                String phoneNumber = rs.getString("Username");
+                String passwordHash = rs.getString("PasswordHash");
+                String role = rs.getString("Role");
+                String address = rs.getString("Address");
+                String email = rs.getString("Email");
+                String avatar = rs.getString("AvatarUrl");
+                boolean active = rs.getBoolean("IsActive");
+
+                return new User(accountId, fullName, phoneNumber, passwordHash, role, address, email, avatar, active);
+            }
+
+            return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 
     public int createCustomer(String fullName, String phone) throws SQLException {
 
@@ -205,10 +248,13 @@ public class UserDAO extends DBContext {
 
         throw new SQLException("Create customer failed");
     }
-
+//SELECT AccountID, Username, firstName, lastName, PasswordHash, Role, Email, IsActive "
+//                + "FROM Accounts WHERE Username = ? AND IsActive = 1
     public User authenticate(String username, String password) throws SQLException {
-        String sql = "SELECT AccountID, Username, firstName, lastName, PasswordHash, Role, Email, IsActive "
-                + "FROM Accounts WHERE Username = ? AND IsActive = 1";
+        String sql = """
+                     SELECT a.AccountID, Username, firstName, lastName, PasswordHash, Role, Email, IsActive, c.Address
+                     FROM Accounts a join Customers c on c.AccountID=a.AccountID WHERE Username = ?
+                     """;
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, username);
             try (ResultSet rs = stmt.executeQuery()) {
@@ -235,6 +281,7 @@ public class UserDAO extends DBContext {
         user.setPasswordHash(rs.getString("PasswordHash"));
         user.setRole(rs.getString("Role"));
         user.setActive(rs.getBoolean("IsActive"));
+        user.setAddress(rs.getNString("Address"));
         try {
             user.setPhone(rs.getString("Username"));
         } catch (SQLException ignored) {
@@ -325,7 +372,7 @@ public class UserDAO extends DBContext {
     public void updateProfile(int userId, String fullName, String phone, String address) throws SQLException {
 
         // update account
-        String sqlAccount = "UPDATE Accounts SET firstName = ?, Username = ? WHERE AccountID = ?";
+        String sqlAccount = "UPDATE Accounts SET lastname='',firstName = ?, Username = ? WHERE AccountID = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sqlAccount)) {
 
@@ -359,6 +406,19 @@ public class UserDAO extends DBContext {
 
             stmt.executeUpdate();
         }
+    }
+
+    public int getCustomerIdByAccountId(int accountId) throws SQLException {
+        String sql = "SELECT CustomerID FROM Customers WHERE AccountID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, accountId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("CustomerID");
+                }
+            }
+        }
+        return -1;
     }
 
     /**
@@ -423,21 +483,5 @@ public class UserDAO extends DBContext {
         return -1;
     }
     
-    public Integer getCustomerIdByAccountId(int accountId) throws SQLException {
-
-    String sql = "SELECT CustomerID FROM Customers WHERE AccountID = ?";
-
-    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-
-        stmt.setInt(1, accountId);
-
-        ResultSet rs = stmt.executeQuery();
-
-        if (rs.next()) {
-            return rs.getInt("CustomerID");
-        }
-    }
-
-    return null;
-}
+    
 }
