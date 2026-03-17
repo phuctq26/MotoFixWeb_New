@@ -72,7 +72,10 @@ public class AdminRepairController extends HttpServlet {
             try {
                 String mode = request.getParameter("mode");
                 int quantity = Integer.parseInt(request.getParameter("quantity"));
-
+                String checkService = request.getParameter("catalogId");
+                if (checkService != null && checkService.startsWith("SERVICE_")) {
+                    quantity = 1;
+                }
                 if ("catalog".equals(mode)) {
                     String catalogIdStr = request.getParameter("catalogId");
 

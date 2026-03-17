@@ -19,7 +19,7 @@
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="fw-bold mb-0">Quản lý yêu cầu tư vấn</h5>
                         <div class="btn-group">
-                            <a href="${pageContext.request.contextPath}/admin/ConsulationController?status="
+                            <a href="${pageContext.request.contextPath}/admin/ConsulationController?status=all"
                                class="btn btn-outline-secondary btn-sm">Tất cả</a>
 
                             <a href="${pageContext.request.contextPath}/admin/ConsulationController?status=pending"

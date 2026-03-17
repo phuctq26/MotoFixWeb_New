@@ -100,6 +100,7 @@ public class AdminReceptionController extends HttpServlet {
         User customer = userDAO.findById(customerId);
         request.setAttribute("customer", customer);
         request.setAttribute("vehicles", vehicleDAO.listByOwner(customerId));
+        
         request.setAttribute("message", "Đã tiếp nhận xe thành công! Mã phiếu: TK-" + ticketId);
         request.setAttribute("ticketId", ticketId);
 

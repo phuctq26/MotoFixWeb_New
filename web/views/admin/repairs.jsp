@@ -132,6 +132,7 @@
                                     </select>
                                     <input type="hidden" name="mode" value="catalog" />
                                 </div>
+                                
                                 <div class="col-md-2">
                                     <label class="form-label">SL</label>
                                     <input class="form-control" name="quantity" value="1" />
@@ -206,4 +207,5 @@
             </main>
         </div>
     </body>
+   
 </html>

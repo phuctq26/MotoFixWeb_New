@@ -6,6 +6,7 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.sql.*;
 
 public class ConsulationDAO extends DBContext {
 
@@ -18,7 +19,8 @@ public class ConsulationDAO extends DBContext {
             String sql = """
                          select c.ConsultationID, c.Name, c.Phone, c.Content, c.CreatedAt, c.Status
                          from Consultation as c
-                         where c.Status = 0
+                         
+                         ORDER BY c.Status ASC, c.CreatedAt DESC;
                          """;
             st = connection.prepareStatement(sql);
             // truyen tham so cho cau lenh sql
@@ -51,6 +53,7 @@ public class ConsulationDAO extends DBContext {
                              c.CreatedAt, 
                              c.Status
                          FROM Consultation AS c
+                         where Status = 0
                          ORDER BY c.Status ASC, c.CreatedAt DESC;
                          """;
             st = connection.prepareStatement(sql);
@@ -123,6 +126,26 @@ public class ConsulationDAO extends DBContext {
             st.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public void createConsulation(String fullName, String phoneNumber, String content) {
+        try {
+            String sql = """
+                            insert into Consultation
+                            (Name, Phone, Content, CreatedAt, Status)
+                            values
+                            (?, ?, ?, GETDATE(), 0)
+                         """;
+            st = connection.prepareStatement(sql);
+            // truyen tham so cho cau lenh sql
+            st.setString(1, fullName);
+            st.setString(2, phoneNumber);
+            st.setString(3,content);
+
+            st.executeUpdate();
+        } catch (SQLException e) {
+
         }
     }
 

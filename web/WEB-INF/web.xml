@@ -10,6 +10,10 @@
         <servlet-name>AdminConsulationController</servlet-name>
         <servlet-class>com.motofix.controller.AdminConsulationController</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>ConsulationController</servlet-name>
+        <servlet-class>com.motofix.controller.ConsulationController</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>UpdateProfileController</servlet-name>
         <url-pattern>/UpdateProfileController</url-pattern>
@@ -21,6 +25,10 @@
     <servlet-mapping>
         <servlet-name>AdminConsulationController</servlet-name>
         <url-pattern>/admin/ConsulationController</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>ConsulationController</servlet-name>
+        <url-pattern>/ConsulationController</url-pattern>
     </servlet-mapping>
     <welcome-file-list>
         <welcome-file>home</welcome-file>

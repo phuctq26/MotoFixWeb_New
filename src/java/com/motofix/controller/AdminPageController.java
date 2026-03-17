@@ -44,7 +44,7 @@ public class AdminPageController extends HttpServlet {
                 break;
             case "/admin/consultations":
                 ConsulationDAO consulDAO = new ConsulationDAO();
-                List<consulation> consulations = consulDAO.getAllConsulations();
+                List<consulation> consulations = consulDAO.getAllConsulations1();
                 request.setAttribute("consulations", consulations);
                 request.getRequestDispatcher("/views/admin/consultations.jsp").forward(request, response);
                 break;

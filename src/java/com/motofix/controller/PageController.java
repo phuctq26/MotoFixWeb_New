@@ -49,6 +49,7 @@ public class PageController extends HttpServlet {
                 break;
 
             case "/contact":
+                
                 request.getRequestDispatcher("/views/customer/contact.jsp").forward(request, response);
                 break;
 

@@ -23,9 +23,9 @@
           <div class="form-card">
             <h5 class="fw-bold">Gọi ngay hotline</h5>
             <p class="text-muted">Đội cứu hộ 24/7 sẵn sàng hỗ trợ trong vòng 15-30 phút.</p>
-            <a class="btn btn-danger" href="tel:0901234567"><i class="bi bi-telephone"></i> 090 123 4567</a>
+            <a class="btn btn-danger" href="tel:0901234567"><i class="bi bi-telephone"></i> 0123 456 789</a>
             <div class="mt-4">
-              <p><i class="bi bi-geo-alt"></i> Phạm vi hỗ trợ: TP. Hồ Chí Minh</p>
+              <p><i class="bi bi-geo-alt"></i> Phạm vi hỗ trợ: TP. Hà Nội</p>
               <p><i class="bi bi-truck"></i> Miễn phí trong bán kính 5km</p>
             </div>
           </div>
