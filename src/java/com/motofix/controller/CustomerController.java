@@ -78,9 +78,9 @@ public class CustomerController extends HttpServlet {
         }
 
         try {
-            User freshUser = userDAO.findById(user.getUserId());
+            User freshUser = userDAO.findByIdToChangePassword(user.getUserId());
 
-            if (!freshUser.getPasswordHash().equals(currentPass)) {
+            if (freshUser == null || !freshUser.getPasswordHash().equals(currentPass)) {
                 request.getSession().setAttribute("error", "Mật khẩu hiện tại không đúng!");
                 response.sendRedirect(request.getContextPath() + "/change-password");
                 return;

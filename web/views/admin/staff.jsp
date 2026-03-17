@@ -147,7 +147,7 @@
                     <c:set var="pColor" value="primary"/>
                     <c:if test="${s.position == 'Kỹ thuật viên'}"><c:set var="pColor" value="danger"/></c:if>
                     
-                    <c:if test="${s.position == 'Thu ngân'}"><c:set var="pColor" value="success"/></c:if>
+                    <c:if test="${s.position == 'Thu ngân'}"><c:set var="pColor" value="primary"/></c:if>
                     <c:if test="${s.position == 'Tiếp tân'}"><c:set var="pColor" value="success"/></c:if>
                     <tr>
                       <td class="text-muted small">${st.count}</td>
