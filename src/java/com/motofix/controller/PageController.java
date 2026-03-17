@@ -4,6 +4,7 @@ import com.motofix.dao.RepairTicketDAO;
 import com.motofix.dao.TicketItemDAO;
 import com.motofix.dao.ServiceDAO;
 import com.motofix.dao.UserDAO;
+import com.motofix.dao.InvoiceDAO; 
 import com.motofix.model.User;
 
 import java.io.IOException;
@@ -20,6 +21,7 @@ public class PageController extends HttpServlet {
     private final TicketItemDAO ticketItemDAO = new TicketItemDAO();
     private final ServiceDAO serviceDAO = new ServiceDAO();
     private final UserDAO userDAO = new UserDAO();
+    private final InvoiceDAO invoiceDAO = new InvoiceDAO(); 
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
@@ -92,9 +94,7 @@ public class PageController extends HttpServlet {
 
                 if (ticketIdParam != null) {
                     try {
-
                         int ticketId = Integer.parseInt(ticketIdParam);
-
                         int customerId = userDAO.getCustomerIdByAccountId(userInvoice.getUserId());
 
                         request.setAttribute("ticket",
@@ -124,7 +124,6 @@ public class PageController extends HttpServlet {
                 }
 
                 try {
-
                     int customerId = userDAO.getCustomerIdByAccountId(user.getUserId());
 
                     request.setAttribute("tickets",
@@ -139,9 +138,6 @@ public class PageController extends HttpServlet {
 
                 break;
 
-            // ================= HISTORY ================= ĐÃ XÓA
-            
-
             // ================= INVOICES =================
             case "/invoices":
 
@@ -153,13 +149,13 @@ public class PageController extends HttpServlet {
                 }
 
                 try {
-
                     int customerId = userDAO.getCustomerIdByAccountId(userInvoices.getUserId());
 
-                    request.setAttribute("tickets",
-                            repairTicketDAO.listPaidByCustomer(customerId));
+                 
+                    request.setAttribute("invoices",
+                            invoiceDAO.getInvoicesByCustomer(customerId));
 
-                } catch (SQLException e) {
+                } catch (Exception e) {
                     request.setAttribute("error", "Không thể tải hóa đơn.");
                 }
 

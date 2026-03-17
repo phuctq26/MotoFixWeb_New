@@ -461,4 +461,53 @@ public class InvoiceDAO extends DBContext {
         return summary;
     }
 
+    
+      public List<Invoice> getInvoicesByCustomer(int customerId) {
+    List<Invoice> list = new ArrayList<>();
+    try {
+        String sql = """
+            SELECT 
+                i.InvoiceID,
+                i.OrderID,
+                i.CustomerID,
+                i.EmployeeID,
+                i.TotalAmount,
+                i.Discount,
+                i.FinalAmount,
+                i.PaymentMethod,
+                i.PaymentStatus,
+                i.CreatedDate,
+                v.PlateNumber
+            FROM Invoices i
+            JOIN RepairOrders ro ON i.OrderID = ro.OrderID
+            JOIN Vehicles v ON ro.VehicleID = v.VehicleID
+            WHERE i.CustomerID = ?
+            ORDER BY i.CreatedDate DESC
+        """;
+
+        PreparedStatement st = connection.prepareStatement(sql);
+        st.setInt(1, customerId);
+
+        ResultSet rs = st.executeQuery();
+
+        while (rs.next()) {
+            Invoice invoice = new Invoice();
+            invoice.setInvoiceID(rs.getInt("InvoiceID"));
+            invoice.setOrderID(rs.getInt("OrderID"));
+            invoice.setCustomerID(rs.getInt("CustomerID"));
+            invoice.setEmployeeID(rs.getInt("EmployeeID"));
+            invoice.setTotalAmount(rs.getDouble("TotalAmount"));
+            invoice.setDiscount(rs.getDouble("Discount"));
+            invoice.setFinalAmount(rs.getDouble("FinalAmount"));
+            invoice.setPaymentStatus(rs.getString("PaymentStatus"));
+            invoice.setCreatedDate(rs.getDate("CreatedDate"));
+            invoice.setPlateNumber(rs.getString("PlateNumber")); // có biển số luôn
+            list.add(invoice);
+        }
+
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return list;
+}
 }
