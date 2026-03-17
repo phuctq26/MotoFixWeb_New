@@ -1,5 +1,5 @@
 ﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ page import="java.util.List,java.text.SimpleDateFormat,com.motofix.model.RepairTicket" %>
+<%@ page import="java.util.List,java.text.SimpleDateFormat,com.motofix.model.Invoice" %>
 <!doctype html>
 <html lang="vi">
 <head>
@@ -48,17 +48,22 @@
                 </thead>
                 <tbody>
                   <%
-                    List<RepairTicket> tickets = (List<RepairTicket>) request.getAttribute("tickets");
+                    List<Invoice> invoices = (List<Invoice>) request.getAttribute("invoices");
                     SimpleDateFormat fmt = new SimpleDateFormat("dd/MM/yyyy");
-                    if (tickets != null && !tickets.isEmpty()) {
-                      for (RepairTicket t : tickets) {
+                    if (invoices != null && !invoices.isEmpty()) {
+                      for (Invoice i : invoices) {
                   %>
                   <tr>
-                    <td><%= t.getTicketCode() %></td>
-                    <td><%= t.getCreatedAt() != null ? fmt.format(t.getCreatedAt()) : "" %></td>
-                    <td><%= t.getPlateNumber() %></td>
-                    <td class="text-end fw-bold"><%= String.format("%,.0f", t.getFinalAmount()) %>đ</td>
-                    <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="${pageContext.request.contextPath}/invoice-detail?ticketId=<%= t.getTicketId() %>">Xem</a></td>
+                    <td>HD<%= i.getInvoiceID() %></td>
+                    <td><%= i.getCreatedDate() != null ? fmt.format(i.getCreatedDate()) : "" %></td>
+                    <td><%= i.getPlateNumber() %></td>
+                    <td class="text-end fw-bold"><%= String.format("%,.0f", i.getFinalAmount()) %>đ</td>
+                    <td class="text-end">
+                      <a class="btn btn-sm btn-outline-primary"
+                        href="${pageContext.request.contextPath}/invoice-detail?ticketId=<%= i.getOrderID() %>">
+                                 Xem
+                      </a>
+                    </td>
                   </tr>
                   <% }
                     } else { %>

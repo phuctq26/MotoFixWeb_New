@@ -3,6 +3,7 @@ package com.motofix.controller;
 import com.motofix.dao.BookingDAO;
 import com.motofix.dao.UserDAO;
 import com.motofix.dao.VehicleDAO;
+import com.motofix.dao.RepairTicketDAO;
 import com.motofix.model.User;
 
 import java.io.IOException;
@@ -24,6 +25,7 @@ public class BookingController extends HttpServlet {
     private BookingDAO bookingDAO;
     private UserDAO userDAO;
     private VehicleDAO vehicleDAO;
+    private RepairTicketDAO repairTicketDAO;
 
     @Override
     public void init() {
@@ -33,6 +35,8 @@ public class BookingController extends HttpServlet {
         userDAO = new UserDAO(bookingDAO.connection);
 
         vehicleDAO = new VehicleDAO(bookingDAO.connection);
+
+        repairTicketDAO = new RepairTicketDAO();
     }
 
     @Override
@@ -42,12 +46,9 @@ public class BookingController extends HttpServlet {
         User sessionUser = (User) request.getSession().getAttribute("user");
 
         if (sessionUser != null) {
-
             try {
-
                 request.setAttribute("vehicles",
                         vehicleDAO.listByOwner(sessionUser.getUserId()));
-
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -75,6 +76,10 @@ public class BookingController extends HttpServlet {
         String phone = request.getParameter("phone");
 
         String plateNumber = request.getParameter("plateNumber");
+        if (plateNumber != null) {
+            plateNumber = plateNumber.trim();
+        }
+
         String brand = request.getParameter("brand");
         String model = request.getParameter("model");
 
@@ -105,7 +110,7 @@ public class BookingController extends HttpServlet {
                 // ===== LẤY CUSTOMER =====
                 if (sessionUser != null) {
 
-                    customerId = sessionUser.getUserId();
+                    customerId = userDAO.getCustomerIdByAccountId(sessionUser.getUserId());
 
                 } else {
 
@@ -120,17 +125,19 @@ public class BookingController extends HttpServlet {
 
                 Integer vehicleId = null;
 
+                String vehicleOption = request.getParameter("vehicleOption");
                 String vIdParam = request.getParameter("vehicleId");
 
-                // ===== XE ĐÃ CÓ =====
-                if (vIdParam != null && !vIdParam.isEmpty()) {
+                if ("existing".equals(vehicleOption)) {
 
-                    vehicleId = Integer.parseInt(vIdParam);
+                    if (vIdParam != null && !vIdParam.isEmpty()) {
+                        vehicleId = Integer.parseInt(vIdParam);
+                    }
 
                 }
 
                 // ===== XE MỚI =====
-                if (vehicleId == null && plateNumber != null && !plateNumber.trim().isEmpty()) {
+                if (vehicleId == null && plateNumber != null && !plateNumber.isEmpty()) {
 
                     vehicleId = vehicleDAO.findByOwnerAndPlate(customerId, plateNumber);
 
@@ -169,6 +176,9 @@ public class BookingController extends HttpServlet {
 
                 // ===== CREATE BOOKING =====
                 bookingDAO.create(customerId, vehicleId, bookingDate, note);
+
+                // ===== CREATE REPAIR TICKET =====
+                repairTicketDAO.create(customerId, vehicleId, note);
 
                 conn.commit();
 

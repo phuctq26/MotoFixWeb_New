@@ -422,4 +422,22 @@ public class UserDAO extends DBContext {
         }
         return -1;
     }
+    
+    public Integer getCustomerIdByAccountId(int accountId) throws SQLException {
+
+    String sql = "SELECT CustomerID FROM Customers WHERE AccountID = ?";
+
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+
+        stmt.setInt(1, accountId);
+
+        ResultSet rs = stmt.executeQuery();
+
+        if (rs.next()) {
+            return rs.getInt("CustomerID");
+        }
+    }
+
+    return null;
+}
 }
