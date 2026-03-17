@@ -32,7 +32,7 @@ public class RoleFilter implements Filter {
             }
         }
 
-        res.sendRedirect(req.getContextPath() + "/login");
+        res.sendRedirect(req.getContextPath() + "/home");
     }
 
     @Override

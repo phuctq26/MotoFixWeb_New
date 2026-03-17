@@ -44,7 +44,7 @@
                 </div>
                 <div class="col-md-6">
                   <label class="form-label">Số điện thoại</label>
-                  <input class="form-control" name="phone" value="${sessionScope.user.phone}" required />
+                  <input class="form-control" name="phone" value="${sessionScope.user.phone}" required readonly/>
                 </div>
               </div>
               <div class="mt-3">
