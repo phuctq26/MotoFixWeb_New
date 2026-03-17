@@ -124,7 +124,7 @@ public class UserDAO extends DBContext {
                 INSERT INTO Accounts 
                     (lastName, firstName, Username, PasswordHash, Role, Email, AvatarUrl, IsActive)
                 VALUES
-                    (?, ?, ?, ?, 'Customer', ?, null, 1);
+                    (?, ?, ?, ?, 'CUSTOMER', ?, null, 1);
                 """;
 
             String[] strings = fullName.split("\\s+");
@@ -140,7 +140,7 @@ public class UserDAO extends DBContext {
             st.setString(2, firstName);
             st.setString(3, phone);
             st.setString(4, phone);
-            st.setString(5, mail);
+            st.setString(5, " ");
             st.executeUpdate();
             ResultSet rs = st.getGeneratedKeys();
             if (rs.next()) {
