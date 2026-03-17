@@ -145,11 +145,10 @@
                   <c:forEach var="s" items="${staffs}" varStatus="st">
                     <%-- Determine badge color for position --%>
                     <c:set var="pColor" value="primary"/>
-                    <c:if test="${s.position == 'Kỹ thuật trưởng'}"><c:set var="pColor" value="danger"/></c:if>
-                    <c:if test="${s.position == 'Thợ chính'}"><c:set var="pColor" value="warning"/></c:if>
-                    <c:if test="${s.position == 'Thợ phụ'}"><c:set var="pColor" value="info"/></c:if>
+                    <c:if test="${s.position == 'Kỹ thuật viên'}"><c:set var="pColor" value="danger"/></c:if>
+                    
                     <c:if test="${s.position == 'Thu ngân'}"><c:set var="pColor" value="success"/></c:if>
-
+                    <c:if test="${s.position == 'Tiếp tân'}"><c:set var="pColor" value="success"/></c:if>
                     <tr>
                       <td class="text-muted small">${st.count}</td>
                       <td>
@@ -254,9 +253,8 @@
                                 <div class="col-md-6">
                                   <label class="form-label fw-semibold">Chức vụ <span class="text-danger">*</span></label>
                                   <select class="form-select" name="position" required>
-                                    <option value="Kỹ thuật trưởng" ${'Kỹ thuật trưởng' == s.position ? 'selected' : ''}>Kỹ thuật trưởng</option>
-                                    <option value="Thợ chính"       ${'Thợ chính'       == s.position ? 'selected' : ''}>Thợ chính</option>
-                                    <option value="Thợ phụ"         ${'Thợ phụ'         == s.position ? 'selected' : ''}>Thợ phụ</option>
+                                    <option value="Kỹ thuật viên" ${'Kỹ thuật viên' == s.position ? 'selected' : ''}>Kỹ thuật viên</option>
+                                
                                     <option value="Thu ngân"        ${'Thu ngân'        == s.position ? 'selected' : ''}>Thu ngân</option>
                                     <option value="Tiếp tân"        ${'Tiếp tân'        == s.position ? 'selected' : ''}>Tiếp tân</option>
                                   </select>
