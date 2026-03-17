@@ -64,8 +64,8 @@ public class VehicleDAO extends DBContext {
         return -1;
     }
 
-    // Lấy danh sách xe của 1 customer
-    public List<Vehicle> listByOwner(int ownerId) throws SQLException {
+    // Lấy danh sách xe của 1 user theo AccountID
+    public List<Vehicle> listByOwner(int accountId) throws SQLException {
 
         List<Vehicle> vehicles = new ArrayList<>();
         try {
@@ -79,28 +79,11 @@ public class VehicleDAO extends DBContext {
                          from Vehicles v
                          join Customers c on v.CustomerID = c.CustomerID
                          join Accounts a on a.AccountID = c.AccountID
-                         where c.CustomerID = ?
-                         
-                         union
-                         
-                         select distinct
-                             v.VehicleID,
-                         a.AccountID,
-                             v.PlateNumber,
-                             v.Brand,
-                             v.Model
-                         from Bookings b
-                         join Vehicles v on b.VehicleID = v.VehicleID
-                         join Customers c on b.CustomerID = c.CustomerID
-                         join Accounts a on a.AccountID = c.AccountID
-                         where c.CustomerID = ?
-                           and b.Status = 'CONFIRMED';
+                         where a.AccountID = ?
                          """;
             st = connection.prepareStatement(sql);
-            // truyen tham so cho cau lenh sql
-            st.setInt(1, ownerId);
-            st.setInt(2, ownerId);
-            rs = st.executeQuery(); // select
+            st.setInt(1, accountId);
+            rs = st.executeQuery();
             while (rs.next()) {
 
                 int VehicleID = rs.getInt("VehicleID");

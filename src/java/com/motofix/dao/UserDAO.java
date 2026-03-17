@@ -253,7 +253,7 @@ public class UserDAO extends DBContext {
     public User authenticate(String username, String password) throws SQLException {
         String sql = """
                      SELECT a.AccountID, Username, firstName, lastName, PasswordHash, Role, Email, IsActive, c.Address
-                     FROM Accounts a join Customers c on c.AccountID=a.AccountID WHERE Username = ? AND IsActive = 1
+                     FROM Accounts a join Customers c on c.AccountID=a.AccountID WHERE Username = ?
                      """;
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, username);
@@ -408,6 +408,19 @@ public class UserDAO extends DBContext {
         }
     }
 
+    public int getCustomerIdByAccountId(int accountId) throws SQLException {
+        String sql = "SELECT CustomerID FROM Customers WHERE AccountID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, accountId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("CustomerID");
+                }
+            }
+        }
+        return -1;
+    }
+
     /**
      * Hard-delete a customer and ALL related data in the correct FK order:
      * TicketItems → RepairTickets → Bookings → Vehicles → User
@@ -470,21 +483,5 @@ public class UserDAO extends DBContext {
         return -1;
     }
     
-    public Integer getCustomerIdByAccountId(int accountId) throws SQLException {
-
-    String sql = "SELECT CustomerID FROM Customers WHERE AccountID = ?";
-
-    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-
-        stmt.setInt(1, accountId);
-
-        ResultSet rs = stmt.executeQuery();
-
-        if (rs.next()) {
-            return rs.getInt("CustomerID");
-        }
-    }
-
-    return null;
-}
+    
 }

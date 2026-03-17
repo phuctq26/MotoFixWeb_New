@@ -32,11 +32,11 @@
           <div class="row g-3">
             <div class="col-md-6">
               <label class="form-label">Họ và tên</label>
-              <input class="form-control" name="fullName" value="${sessionScope.user.fullName}" placeholder="Nguyễn Văn A" required />
+              <input class="form-control" name="fullName" value="${sessionScope.user.fullName}" placeholder="Nguyễn Văn A" required readonly/>
             </div>
             <div class="col-md-6">
               <label class="form-label">Số điện thoại</label>
-              <input class="form-control" name="phone" value="${sessionScope.user.phone}" placeholder="0901234567" required />
+              <input class="form-control" name="phone" value="${sessionScope.user.phone}" placeholder="0901234567" required readonly/>
             </div>
           </div>
 

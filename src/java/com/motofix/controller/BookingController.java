@@ -61,88 +61,39 @@ public class BookingController extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
-        request.setCharacterEncoding("UTF-8");
-
-        System.out.println("BOOKING POST RUNNING");
-
-        User sessionUser = null;
-
+        User sessionUser=null;
         if (request.getSession(false) != null) {
             sessionUser = (User) request.getSession(false).getAttribute("user");
         }
 
         String fullName = request.getParameter("fullName");
         String phone = request.getParameter("phone");
-
         String plateNumber = request.getParameter("plateNumber");
         if (plateNumber != null) {
             plateNumber = plateNumber.trim();
         }
-
         String brand = request.getParameter("brand");
         String model = request.getParameter("model");
-
         String date = request.getParameter("bookingDate");
         String time = request.getParameter("bookingTime");
         String note = request.getParameter("note");
-
-        Connection conn = bookingDAO.connection;
-
-        if (conn == null) {
-
-            request.setAttribute("error", "Không kết nối được database.");
-
-            request.getRequestDispatcher("/views/customer/booking.jsp")
-                    .forward(request, response);
-
-            return;
-        }
-
-        try {
-
-            conn.setAutoCommit(false);
-
             try {
 
-                int customerId;
-
-                // ===== LẤY CUSTOMER =====
-                if (sessionUser != null) {
-
-                    customerId = userDAO.getCustomerIdByAccountId(sessionUser.getUserId());
-
-                } else {
-
-                    User user = userDAO.findByPhone(phone);
-
-                    if (user == null) {
-                        customerId = userDAO.createCustomer(fullName, phone);
-                    } else {
-                        customerId = user.getUserId();
-                    }
-                }
-
+                int customerId=userDAO.getCustomerIdByAccountId(sessionUser.getUserId());
                 Integer vehicleId = null;
 
                 String vehicleOption = request.getParameter("vehicleOption");
                 String vIdParam = request.getParameter("vehicleId");
 
                 if ("existing".equals(vehicleOption)) {
-
                     if (vIdParam != null && !vIdParam.isEmpty()) {
                         vehicleId = Integer.parseInt(vIdParam);
                     }
-
                 }
 
                 // ===== XE MỚI =====
                 if (vehicleId == null && plateNumber != null && !plateNumber.isEmpty()) {
-
-                    vehicleId = vehicleDAO.findByOwnerAndPlate(customerId, plateNumber);
-
                     if (vehicleId == null) {
-
                         vehicleId = vehicleDAO.create(
                                 customerId,
                                 plateNumber,
@@ -152,9 +103,7 @@ public class BookingController extends HttpServlet {
                     }
                 }
 
-                if (vehicleId == null) {
-                    throw new Exception("Vehicle information missing");
-                }
+                
 
                 // ===== DATE TIME =====
                 LocalDate bookingDay = LocalDate.parse(date);
@@ -166,59 +115,22 @@ public class BookingController extends HttpServlet {
                 LocalDateTime bookingDateTime = LocalDateTime.of(bookingDay, bookingTime);
 
                 Timestamp bookingDate = Timestamp.valueOf(bookingDateTime);
-
-                // ===== DEBUG =====
-                System.out.println("===== DEBUG BOOKING =====");
-                System.out.println("customerId = " + customerId);
-                System.out.println("vehicleId = " + vehicleId);
-                System.out.println("bookingDate = " + bookingDate);
-                System.out.println("note = " + note);
-
                 // ===== CREATE BOOKING =====
                 bookingDAO.create(customerId, vehicleId, bookingDate, note);
-
-                // ===== CREATE REPAIR TICKET =====
-                repairTicketDAO.create(customerId, vehicleId, note);
-
-                conn.commit();
-
                 request.setAttribute("success",
                         "Đặt lịch thành công! Chúng tôi sẽ liên hệ xác nhận.");
-
-            } catch (Exception e) {
-
-                conn.rollback();
-
-                e.printStackTrace();
-
+            } catch (NumberFormatException | SQLException e) {
                 request.setAttribute("error",
                         "Không thể đặt lịch. Vui lòng thử lại.");
-
-            } finally {
-
-                conn.setAutoCommit(true);
-
-            }
-
-        } catch (SQLException e) {
-
-            e.printStackTrace();
-
-            request.setAttribute("error", "Lỗi kết nối hệ thống.");
-        }
+            } 
 
         if (sessionUser != null) {
-
             try {
-
                 request.setAttribute("vehicles",
                         vehicleDAO.listByOwner(sessionUser.getUserId()));
-
             } catch (SQLException e) {
-                e.printStackTrace();
             }
         }
-
         request.getRequestDispatcher("/views/customer/booking.jsp")
                 .forward(request, response);
     }

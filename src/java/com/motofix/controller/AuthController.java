@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 public class AuthController extends HttpServlet {
+
     private final UserDAO userDAO = new UserDAO();
 
     @Override
@@ -37,7 +38,7 @@ public class AuthController extends HttpServlet {
 
         try {
             User user = userDAO.authenticate(username, password);
-            if (user != null) {
+            if (user != null && user.isActive()) {
                 HttpSession session = request.getSession(true);
                 session.setAttribute("user", user);
                 if ("ADMIN".equalsIgnoreCase(user.getRole())) {
@@ -45,13 +46,17 @@ public class AuthController extends HttpServlet {
                 } else {
                     response.sendRedirect(request.getContextPath() + "/home");
                 }
-                return;
+                //   return;
+            } else if (user != null && !user.isActive()) {
+                request.setAttribute("error", "Tài khoản của bạn đã bị vô hiệu.");
+                request.getRequestDispatcher("/views/auth/login.jsp").forward(request, response);
+            } else {
+                request.setAttribute("error", "Sai tên đăng nhập hoặc mật khẩu.");
+                request.getRequestDispatcher("/views/auth/login.jsp").forward(request, response);
             }
         } catch (Exception e) {
             // fall through to show error
         }
 
-        request.setAttribute("error", "Sai tên đăng nhập hoặc mật khẩu.");
-        request.getRequestDispatcher("/views/auth/login.jsp").forward(request, response);
     }
 }
