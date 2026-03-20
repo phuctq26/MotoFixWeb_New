@@ -15,7 +15,7 @@ public class AdminBookingController extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String filter = request.getParameter("filter");
         if (filter == null || filter.isEmpty()) {
-            filter = "pending"; // Default filter
+            filter = "pending"; 
         }
         
         String searchValue = request.getParameter("value");
@@ -59,7 +59,7 @@ public class AdminBookingController extends HttpServlet {
                     bookingDAO.updateStatus(bookingId, "CANCELLED");
                 }
             } catch (Exception e) {
-                // ignore and redirect
+               
             }
         }
         

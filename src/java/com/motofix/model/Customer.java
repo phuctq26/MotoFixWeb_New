@@ -16,7 +16,7 @@ public class Customer {
     private String avatarUrl;
     private boolean isActive = true;
 
-    /** Returns "Họ Tên" (lastName + " " + firstName) */
+    
     public String getFullName() {
         String l = lastName != null ? lastName.trim() : "";
         String f = firstName != null ? firstName.trim() : "";

@@ -15,7 +15,7 @@
     <main class="content">
       <%@ include file="_topbar.jspf" %>
 
-      <%-- Success message --%>
+     
       <c:if test="${not empty sessionScope.message}">
         <div class="alert alert-success alert-dismissible fade show" role="alert">
           <i class="bi bi-check-circle me-2"></i>${sessionScope.message}
@@ -24,7 +24,7 @@
         <c:remove var="message" scope="session"/>
       </c:if>
 
-      <%-- Form error --%>
+  
       <c:set var="formError"   value="${sessionScope.formError}"/>
       <c:set var="fUsername"   value="${sessionScope.formUsername}"/>
       <c:set var="fFirstName"  value="${sessionScope.formFirstName}"/>
@@ -64,7 +64,7 @@
           </button>
         </div>
 
-        <!-- ===== ADD MODAL ===== -->
+      
         <div class="modal fade" id="addCustomerModal" tabindex="-1">
           <div class="modal-dialog">
             <div class="modal-content">
@@ -135,7 +135,7 @@
           </div>
         </div>
 
-        <!-- ===== TABLE ===== -->
+        
         <div class="table-responsive">
           <table class="table align-middle" id="customersTable">
             <thead class="table-light">
@@ -215,7 +215,7 @@
                       </td>
                     </tr>
 
-                    <!-- EDIT MODAL -->
+                  
                     <div class="modal fade" id="editModal${c.customerId}" tabindex="-1">
                       <div class="modal-dialog">
                         <div class="modal-content">
@@ -270,7 +270,7 @@
                       </div>
                     </div>
 
-                    <!-- DEACTIVATE / RESTORE MODAL -->
+                    
                     <c:choose>
                       <c:when test="${c.active}">
                         <div class="modal fade" id="deactivateModal${c.customerId}" tabindex="-1">
@@ -345,7 +345,7 @@
               </c:choose>
             </tbody>
           </table>
-        <!-- ===== PAGINATION ===== -->
+        
         <div class="d-flex justify-content-between align-items-center mt-3">
           <div class="text-muted small">
             Hiển thị <strong>${fn:length(customers)}</strong> / tổng số khách hàng

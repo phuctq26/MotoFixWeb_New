@@ -1,8 +1,6 @@
 package com.motofix.model;
 
-/**
- * POJO to hold aggregated revenue statistics for a date range.
- */
+
 public class RevenueSummary {
 
     private double totalRevenue;

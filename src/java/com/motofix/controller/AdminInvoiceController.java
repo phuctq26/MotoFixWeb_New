@@ -35,7 +35,7 @@ public class AdminInvoiceController extends HttpServlet {
             }
         }
 
-        // --- Revenue Date Range Filter Logic ---
+        
         String filterType = request.getParameter("filterType");
         String customStart = request.getParameter("startDate");
         String customEnd = request.getParameter("endDate");
@@ -67,14 +67,14 @@ public class AdminInvoiceController extends HttpServlet {
                     startDate = LocalDate.parse(customStart);
                     endDate = LocalDate.parse(customEnd).plusDays(1); // inclusive end
                 } catch (Exception e) {
-                    // fallback to this_month on invalid dates
+                    
                     filterType = "this_month";
                     YearMonth cm = YearMonth.from(today);
                     startDate = cm.atDay(1);
                     endDate = cm.atEndOfMonth().plusDays(1);
                 }
                 break;
-            default: // this_month
+            default: 
                 filterType = "this_month";
                 YearMonth currentMonth = YearMonth.from(today);
                 startDate = currentMonth.atDay(1);
@@ -104,12 +104,12 @@ public class AdminInvoiceController extends HttpServlet {
             request.setAttribute("totalInvoices", totalInvoices);
             request.setAttribute("value", value);
 
-            // Existing static summary cards
+            
             request.setAttribute("revenueMonth", invoiceDao.getRevenueMonth());
             request.setAttribute("invoiceCount", invoiceDao.getInvoiceCount());
             request.setAttribute("revenueToday", invoiceDao.getRevenueToday());
 
-            // Dynamic filtered summary
+            
             request.setAttribute("revenueSummary", summary);
             request.setAttribute("filterType", filterType);
             request.setAttribute("customStartDate", customStart);

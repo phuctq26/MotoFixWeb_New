@@ -1,7 +1,7 @@
 ﻿<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
 <div class="topbar">
   <div class="d-flex align-items-center gap-2">
-    <%-- Hamburger — chỉ hiện trên mobile (≤992px) --%>
+    
     <button class="sidebar-toggle" id="sidebarToggle" aria-label="Mở menu">
       <i class="bi bi-list"></i>
     </button>
@@ -19,7 +19,7 @@
   </div>
 </div>
 
-<%-- Overlay backdrop cho sidebar trên mobile --%>
+
 <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
 <script>
@@ -37,7 +37,7 @@
     });
     overlay.addEventListener('click', closeSidebar);
 
-    // Đóng sidebar khi click vào nav-link trên mobile
+   
     sidebar.querySelectorAll('.nav-link').forEach(function (link) {
       link.addEventListener('click', function () {
         if (window.innerWidth <= 992) closeSidebar();

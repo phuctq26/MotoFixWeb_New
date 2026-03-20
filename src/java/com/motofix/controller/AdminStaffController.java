@@ -63,7 +63,7 @@ public class AdminStaffController extends HttpServlet {
             salary = Long.parseLong(salaryStr);
         } catch (Exception ignored) {
         }
-        int status = 2; // Default for create
+        int status = 2; 
         if (statusParam != null && !statusParam.isEmpty()) {
             try {
                 status = Integer.parseInt(statusParam);

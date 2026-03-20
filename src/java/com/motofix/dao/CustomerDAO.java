@@ -5,11 +5,6 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * DAO for Customers = JOIN Accounts + Customers (MotoFixDBNew schema).
- * Extends DBContext to use the shared Connection initialized from
- * ConnectDB.properties.
- */
 public class CustomerDAO extends DBContext {
 
     private Customer map(ResultSet rs) throws SQLException {
@@ -35,8 +30,7 @@ public class CustomerDAO extends DBContext {
                 + "FROM Customers c JOIN Accounts a ON c.AccountID = a.AccountID "
                 + "ORDER BY c.CustomerID DESC";
         List<Customer> list = new ArrayList<>();
-        try (PreparedStatement stmt = connection.prepareStatement(sql);
-                ResultSet rs = stmt.executeQuery()) {
+        try (PreparedStatement stmt = connection.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 list.add(map(rs));
             }
@@ -63,7 +57,9 @@ public class CustomerDAO extends DBContext {
                 stmt.setString(4, k);
             }
             try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) return rs.getInt(1);
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
             }
         }
         return 0;
@@ -82,7 +78,7 @@ public class CustomerDAO extends DBContext {
             sql += " AND (a.firstName LIKE ? OR a.lastName LIKE ? OR a.Username LIKE ? OR c.Address LIKE ?)";
         }
         sql += " ORDER BY c.CustomerID DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
-        
+
         List<Customer> list = new ArrayList<>();
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             int paramIdx = 1;
@@ -95,7 +91,7 @@ public class CustomerDAO extends DBContext {
             }
             stmt.setInt(paramIdx++, offset);
             stmt.setInt(paramIdx, limit);
-            
+
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
                     list.add(map(rs));
@@ -121,7 +117,6 @@ public class CustomerDAO extends DBContext {
         return null;
     }
 
-    /** Returns non-null if username already exists in Accounts */
     public Customer findByUsername(String username) throws SQLException {
         String sql = "SELECT c.CustomerID, a.AccountID, a.Username, a.firstName, a.lastName, "
                 + "a.Email, a.AvatarUrl, a.IsActive, c.Address "
@@ -138,10 +133,6 @@ public class CustomerDAO extends DBContext {
         return null;
     }
 
-    /**
-     * Create: INSERT into Accounts (Role='CUSTOMER'), then INSERT into Customers.
-     * Password defaults to hashed username if not provided.
-     */
     public void create(String username, String firstName, String lastName,
             String email, String password, String address) throws SQLException {
         String passToStore = (password != null && !password.isEmpty())
@@ -182,7 +173,6 @@ public class CustomerDAO extends DBContext {
         }
     }
 
-    /** Update: modify Accounts and Customers in one transaction */
     public void update(int customerId, String firstName, String lastName,
             String email, String address, boolean isActive) throws SQLException {
         connection.setAutoCommit(false);
@@ -212,7 +202,6 @@ public class CustomerDAO extends DBContext {
         }
     }
 
-    /** Soft delete: mark account inactive */
     public void deactivate(int customerId) throws SQLException {
         String sql = "UPDATE Accounts SET IsActive=0 "
                 + "WHERE AccountID = (SELECT AccountID FROM Customers WHERE CustomerID=?)";
@@ -222,7 +211,6 @@ public class CustomerDAO extends DBContext {
         }
     }
 
-    /** Restore: mark account active again */
     public void activate(int customerId) throws SQLException {
         String sql = "UPDATE Accounts SET IsActive=1 "
                 + "WHERE AccountID = (SELECT AccountID FROM Customers WHERE CustomerID=?)";

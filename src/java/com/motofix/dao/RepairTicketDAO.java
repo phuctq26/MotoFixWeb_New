@@ -11,7 +11,6 @@ public class RepairTicketDAO extends DBContext {
     PreparedStatement st;
     ResultSet rs;
 
-    // ── helper mapper ─────────────────────────────────────────────────────────
     private RepairTicket mapTicket(ResultSet rs) throws SQLException {
         RepairTicket t = new RepairTicket();
         t.setTicketId(rs.getInt("TicketID"));
@@ -80,15 +79,15 @@ public class RepairTicketDAO extends DBContext {
 
     public int createCustomer(String fullName, String phone) throws SQLException {
         int accountId = -1;
-        int customerId = -1; // Thêm biến này
+        int customerId = -1; 
 
         try {
-            // 1. Chèn vào Accounts
+            
             String sql = "INSERT INTO Accounts (lastName, firstName, Username, PasswordHash, Role, Email, IsActive) VALUES (?, ?, ?, ?, 'Customer', ?, 1)";
 
-            // ... (đoạn xử lý tách tên giữ nguyên) ...
+            
             st = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
-            // ... (set tham số) ...
+            
             st.executeUpdate();
 
             ResultSet rs = st.getGeneratedKeys();
@@ -96,19 +95,19 @@ public class RepairTicketDAO extends DBContext {
                 accountId = rs.getInt(1);
             }
 
-            // 2. Chèn vào Customers và LẤY CustomerID
+            
             String sqlCus = "INSERT INTO Customers (AccountID, Address) VALUES (?, '')";
-            // Sử dụng RETURN_GENERATED_KEYS ở đây
+            
             PreparedStatement st2 = connection.prepareStatement(sqlCus, Statement.RETURN_GENERATED_KEYS);
             st2.setInt(1, accountId);
             st2.executeUpdate();
 
             ResultSet rsCus = st2.getGeneratedKeys();
             if (rsCus.next()) {
-                customerId = rsCus.getInt(1); // Lấy ID của bảng Customers
+                customerId = rsCus.getInt(1); 
             }
 
-            return customerId; // TRẢ VỀ CustomerID, KHÔNG PHẢI accountId
+            return customerId; 
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -244,7 +243,7 @@ public class RepairTicketDAO extends DBContext {
                 t.setStatus(rs.getString("Status"));
                 t.setPhone(rs.getString("Username"));
                 t.setEmployeeID(rs.getString("EmployeeID"));
-                // Gán giá trị tính toán vào Model
+               
                 double total = rs.getDouble("ComputedTotal");
                 double disc = rs.getDouble("InvoiceDiscount");
                 t.setTotalAmount(total);
@@ -317,7 +316,7 @@ public class RepairTicketDAO extends DBContext {
         }
     }
 
-    // ── Revenue stats ─────────────────────────────────────────────────────────
+    
     public double getRevenueThisMonth() throws SQLException {
         String sql = "SELECT ISNULL(SUM(FinalAmount),0) FROM Invoices "
                 + "WHERE PaymentStatus='PAID' AND MONTH(PaidAt)=MONTH(GETDATE()) AND YEAR(PaidAt)=YEAR(GETDATE())";
@@ -352,7 +351,7 @@ public class RepairTicketDAO extends DBContext {
 
     public List<RepairTicket> listRecentInvoices() throws SQLException {
         List<RepairTicket> lists = new ArrayList<>();
-        // Sử dụng Text Block (Java 15+)
+        
         String sql = """
             WITH OrderCosts AS (
                 SELECT 
@@ -419,7 +418,7 @@ public class RepairTicketDAO extends DBContext {
 
     public List<RepairTicket> listRecentInvoices(int pageIndex, int pageSize) throws SQLException {
         List<RepairTicket> lists = new ArrayList<>();
-        // Sử dụng Text Block (Java 15+)
+        
         String sql = """
             WITH OrderCosts AS (
                 SELECT
@@ -558,7 +557,7 @@ public class RepairTicketDAO extends DBContext {
                  ORDER BY ro.CompletedAt DESC;
                  """;
         try {
-            // Mở kết nối và chuẩn bị query (Giả sử bạn đã có biến connection)
+            
             st = connection.prepareStatement(sql);
             rs = st.executeQuery();
 
@@ -639,6 +638,8 @@ public class RepairTicketDAO extends DBContext {
 //            return null;
 //        }
 //    }
+    
+    
     public int findByIdForEmployee(int ticketId) {
         int id;
         try {

@@ -22,9 +22,7 @@ public class UserDAO extends DBContext {
         return null;
     }
 
-    /**
-     * Legacy — kept for compatibility
-     */
+    
     public User findByPhone(String phone) throws SQLException {
         try {
             String sql = """
@@ -269,7 +267,7 @@ public class UserDAO extends DBContext {
         return null;
     }
 
-    // Helper to map ResultSet from Accounts table to User
+    
     private User mapAccount(ResultSet rs) throws SQLException {
         User user = new User();
         user.setUserId(rs.getInt("AccountID"));
@@ -314,10 +312,7 @@ public class UserDAO extends DBContext {
         return list;
     }
 
-    /**
-     * Create customer with all fields: fullName, phone, password, email,
-     * address.
-     */
+   
     public void createCustomerFull(String fullName, String phone, String password,
             String email, String address) throws SQLException {
         String sql = "INSERT INTO Accounts (FullName, Phone, PasswordHash, Role, Email, Address) "
@@ -421,10 +416,7 @@ public class UserDAO extends DBContext {
         return -1;
     }
 
-    /**
-     * Hard-delete a customer and ALL related data in the correct FK order:
-     * TicketItems → RepairTickets → Bookings → Vehicles → User
-     */
+    
     public void delete(int userId) throws SQLException {
         connection.setAutoCommit(false);
         try {
@@ -452,9 +444,7 @@ public class UserDAO extends DBContext {
         this.connection = conn;
     }
 
-    /**
-     * Helper: run a single-param int DELETE
-     */
+    
     private void exec(String sql, int param) throws SQLException {
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, param);

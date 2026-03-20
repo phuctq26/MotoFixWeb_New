@@ -112,7 +112,7 @@
                         </table>
                     </div>
                     
-                    <!-- ===== PAGINATION ===== -->
+                  
                     <%
                         Integer totalPagesObj = (Integer) request.getAttribute("totalPages");
                         Integer currentPageObj = (Integer) request.getAttribute("currentPage");
