@@ -5,10 +5,17 @@ import com.motofix.dao.TicketItemDAO;
 import com.motofix.dao.ServiceDAO;
 import com.motofix.dao.UserDAO;
 import com.motofix.dao.InvoiceDAO; 
+import com.motofix.model.Invoice;
+import com.motofix.model.RepairTicket;
 import com.motofix.model.User;
 
 import java.io.IOException;
 import java.sql.SQLException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
@@ -17,6 +24,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 public class PageController extends HttpServlet {
+
+    private static final int VEHICLES_PAGE_SIZE = 10;
 
     private final RepairTicketDAO repairTicketDAO = new RepairTicketDAO();
     private final TicketItemDAO ticketItemDAO = new TicketItemDAO();
@@ -137,8 +146,8 @@ public class PageController extends HttpServlet {
                 try {
                     int customerId = userDAO.getCustomerIdByAccountId(user.getUserId());
 
-                    request.setAttribute("tickets",
-                            repairTicketDAO.listByCustomer(customerId));
+                    List<RepairTicket> allTickets = repairTicketDAO.listByCustomer(customerId);
+                    applyVehiclesSearchAndPagination(request, allTickets);
 
                 } catch (SQLException e) {
                     request.setAttribute("error", "Không thể tải tiến độ sửa xe.");
@@ -178,5 +187,139 @@ public class PageController extends HttpServlet {
             default:
                 response.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
+    }
+
+    private void applyVehiclesSearchAndPagination(HttpServletRequest request, List<RepairTicket> all) {
+        if (all == null) {
+            all = Collections.emptyList();
+        }
+        String qRaw = request.getParameter("q");
+        String q = qRaw != null ? qRaw.trim() : "";
+        String stRaw = request.getParameter("status");
+        String status = stRaw != null ? stRaw.trim() : "";
+        int page = parsePositivePage(request.getParameter("page"));
+
+        List<RepairTicket> filtered = filterVehiclesTickets(all, q, status);
+        int total = filtered.size();
+        int totalPages = total <= 0 ? 1 : (int) Math.ceil((double) total / VEHICLES_PAGE_SIZE);
+        if (page > totalPages) {
+            page = totalPages;
+        }
+        int from = (page - 1) * VEHICLES_PAGE_SIZE;
+        List<RepairTicket> slice = from >= total
+                ? Collections.emptyList()
+                : new ArrayList<>(filtered.subList(from, Math.min(from + VEHICLES_PAGE_SIZE, total)));
+
+        request.setAttribute("tickets", slice);
+        request.setAttribute("repairSearchQ", q);
+        request.setAttribute("repairSearchStatus", status);
+        request.setAttribute("repairPagerPage", page);
+        request.setAttribute("repairPagerTotalPages", totalPages);
+        request.setAttribute("repairPagerTotalCount", total);
+    }
+
+    private static int parsePositivePage(String s) {
+        if (s == null || s.isEmpty()) {
+            return 1;
+        }
+        try {
+            int v = Integer.parseInt(s.trim());
+            return v < 1 ? 1 : v;
+        } catch (NumberFormatException e) {
+            return 1;
+        }
+    }
+
+    private static List<RepairTicket> filterVehiclesTickets(List<RepairTicket> all, String q, String status) {
+        String qNorm = normalizeVehiclesQuery(q);
+        boolean filterText = !qNorm.isEmpty();
+        boolean filterStatus = !status.isEmpty() && !"ALL".equalsIgnoreCase(status);
+        SimpleDateFormat fmt = new SimpleDateFormat("dd/MM/yyyy", Locale.ROOT);
+        List<RepairTicket> out = new ArrayList<>();
+        for (RepairTicket t : all) {
+            if (filterStatus && !status.equalsIgnoreCase(nullToEmpty(t.getStatus()))) {
+                continue;
+            }
+            if (filterText && !matchesVehiclesSearch(t, qNorm, fmt)) {
+                continue;
+            }
+            out.add(t);
+        }
+        return out;
+    }
+
+    private static boolean matchesVehiclesSearch(RepairTicket t, String qNorm, SimpleDateFormat fmt) {
+        String plate = nullToEmpty(t.getPlateNumber()).toLowerCase(Locale.ROOT).replace(" ", "");
+        if (plate.contains(qNorm)) {
+            return true;
+        }
+        if (t.getCreatedAt() != null) {
+            String d = fmt.format(t.getCreatedAt()).toLowerCase(Locale.ROOT);
+            if (d.contains(qNorm)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static String normalizeVehiclesQuery(String q) {
+        if (q == null) {
+            return "";
+        }
+        return q.trim().toLowerCase(Locale.ROOT).replace(" ", "");
+    }
+
+    private static String nullToEmpty(String s) {
+        return s != null ? s : "";
+    }
+
+    /**
+     * Lọc hóa đơn theo tham số GET {@code q}: mã (HD + số), ngày dd/MM/yyyy, biển số.
+     */
+    private void applyCustomerInvoiceSearch(HttpServletRequest request, List<Invoice> all) {
+        if (all == null) {
+            all = Collections.emptyList();
+        }
+        String qRaw = request.getParameter("q");
+        String q = qRaw != null ? qRaw.trim() : "";
+        request.setAttribute("invoiceSearchQ", q);
+        if (q.isEmpty()) {
+            request.setAttribute("invoices", all);
+            return;
+        }
+        String qNorm = q.toLowerCase(Locale.ROOT).replace(" ", "");
+        SimpleDateFormat fmt = new SimpleDateFormat("dd/MM/yyyy", Locale.ROOT);
+        List<Invoice> out = new ArrayList<>();
+        for (Invoice inv : all) {
+            if (matchesCustomerInvoiceSearch(inv, qNorm, fmt)) {
+                out.add(inv);
+            }
+        }
+        request.setAttribute("invoices", out);
+    }
+
+    private static boolean matchesCustomerInvoiceSearch(Invoice inv, String qNorm, SimpleDateFormat fmt) {
+        String plateNorm = nullToEmpty(inv.getPlateNumber()).toLowerCase(Locale.ROOT).replace(" ", "");
+        if (!plateNorm.isEmpty() && plateNorm.contains(qNorm)) {
+            return true;
+        }
+        if (inv.getCreatedDate() != null) {
+            String d = fmt.format(inv.getCreatedDate()).toLowerCase(Locale.ROOT).replace(" ", "");
+            if (d.contains(qNorm)) {
+                return true;
+            }
+        }
+        String idStr = String.valueOf(inv.getInvoiceID());
+        String codeNorm = "hd" + idStr;
+        if (qNorm.length() >= 3 && codeNorm.startsWith(qNorm)) {
+            return true;
+        }
+        if (qNorm.startsWith("hd") && qNorm.length() > 2) {
+            String suffix = qNorm.substring(2);
+            if (suffix.matches("\\d+") && idStr.startsWith(suffix)) {
+                return true;
+            }
+        }
+        return qNorm.matches("\\d+") && idStr.equals(qNorm);
     }
 }

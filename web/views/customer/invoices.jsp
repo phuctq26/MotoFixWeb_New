@@ -1,4 +1,4 @@
-﻿<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <%@ page import="java.util.List,java.text.SimpleDateFormat,com.motofix.model.Invoice" %>
 <!doctype html>
 <html lang="vi">
@@ -29,12 +29,20 @@
             <div class="alert alert-danger"><%= request.getAttribute("error") %></div>
           <% } %>
           <div class="table-card">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <div class="input-group" style="max-width:360px;">
+            <%
+              String invQ = request.getAttribute("invoiceSearchQ") != null
+                      ? String.valueOf(request.getAttribute("invoiceSearchQ")) : "";
+              String invQEsc = invQ.replace("&", "&amp;").replace("\"", "&quot;").replace("<", "&lt;");
+            %>
+            <form method="get" action="${pageContext.request.contextPath}/invoices" class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+              <div class="input-group" style="max-width:420px;">
                 <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-                <input class="form-control" placeholder="Tìm mã hóa đơn..." />
+                <input type="search" name="q" class="form-control" autocomplete="off"
+                       placeholder="Mã hóa đơn (VD: HD11), ngày hoặc biển số..."
+                       value="<%= invQEsc %>" />
+                <button type="submit" class="btn btn-primary">Tìm</button>
               </div>
-            </div>
+            </form>
             <div class="table-responsive">
               <table class="table align-middle">
                 <thead>

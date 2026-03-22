@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --brand:#1e78ff;
   --ink:#1d232b;
   --soft:#f5f6f8;
@@ -141,6 +141,7 @@ body {
 .status-pill.success { background:#ecfdf3; color:#15803d; }
 .status-pill.info { background:#eef2ff; color:#4338ca; }
 .status-pill.warning { background:#fff7ed; color:#c2410c; }
+.status-pill.danger { background:#fef2f2; color:#b91c1c; }
 
 .cta-card {
   background:linear-gradient(120deg,#1e78ff,#4f9bff);
