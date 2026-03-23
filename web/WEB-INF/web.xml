@@ -14,6 +14,14 @@
         <servlet-name>ConsulationController</servlet-name>
         <servlet-class>com.motofix.controller.ConsulationController</servlet-class>
     </servlet>
+    <servlet>
+        <servlet-name>java</servlet-name>
+        <servlet-class>BookingHistoryController.java</servlet-class>
+    </servlet>
+    <servlet>
+        <servlet-name>BookingHistory</servlet-name>
+        <servlet-class>com.motofix.controller.BookingHistory</servlet-class>
+    </servlet>
     <servlet-mapping>
         <servlet-name>UpdateProfileController</servlet-name>
         <url-pattern>/UpdateProfileController</url-pattern>
@@ -29,6 +37,14 @@
     <servlet-mapping>
         <servlet-name>ConsulationController</servlet-name>
         <url-pattern>/ConsulationController</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>java</servlet-name>
+        <url-pattern>/bookinghistory</url-pattern>
+    </servlet-mapping>
+    <servlet-mapping>
+        <servlet-name>BookingHistory</servlet-name>
+        <url-pattern>/booking-history</url-pattern>
     </servlet-mapping>
     <welcome-file-list>
         <welcome-file>home</welcome-file>

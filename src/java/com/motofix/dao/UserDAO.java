@@ -250,7 +250,7 @@ public class UserDAO extends DBContext {
 //                + "FROM Accounts WHERE Username = ? AND IsActive = 1
     public User authenticate(String username, String password) throws SQLException {
         String sql = """
-                     SELECT a.AccountID, Username, firstName, lastName, PasswordHash, Role, Email, IsActive, c.Address
+                     SELECT a.AccountID, c.CustomerID, Username, firstName, lastName, PasswordHash, Role, Email, IsActive, c.Address
                      FROM Accounts a join Customers c on c.AccountID=a.AccountID WHERE Username = ?
                      """;
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -283,6 +283,11 @@ public class UserDAO extends DBContext {
         try {
             user.setPhone(rs.getString("Username"));
         } catch (SQLException ignored) {
+        }
+        try {
+            user.setCustomerID(rs.getInt("CustomerID"));
+        } catch (SQLException ignored) {
+            // Some queries do not join Customers, so CustomerID may be absent.
         }
         return user;
     }

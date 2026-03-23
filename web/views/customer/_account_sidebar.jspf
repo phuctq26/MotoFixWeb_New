@@ -1,4 +1,5 @@
-﻿<%
+<%@ page contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%
 String activeAccount = (String) request.getAttribute("activeAccount");
 if (activeAccount == null) { activeAccount = ""; }
 %>
@@ -8,6 +9,7 @@ if (activeAccount == null) { activeAccount = ""; }
   <small class="text-muted">Thành viên Bạc</small>
   <div class="d-grid gap-2 mt-4 text-start account-nav">
     <a class="btn btn-outline-primary <%= "profile".equals(activeAccount) ? "active" : "" %>" href="${pageContext.request.contextPath}/profile">Thông tin cá nhân</a>
+    <a class="btn btn-outline-primary <%= "bookings".equals(activeAccount) ? "active" : "" %>" href="${pageContext.request.contextPath}/booking-history">Thông tin đặt lịch</a>
     <a class="btn btn-outline-primary <%= "vehicles".equals(activeAccount) ? "active" : "" %>" href="${pageContext.request.contextPath}/vehicles">Xe &amp; tiến độ sửa</a>
     <a class="btn btn-outline-primary <%= "invoices".equals(activeAccount) ? "active" : "" %>" href="${pageContext.request.contextPath}/invoices">Hóa đơn &amp; thanh toán</a>
     <a class="btn btn-outline-primary <%= "change-password".equals(activeAccount) ? "active" : "" %>" href="${pageContext.request.contextPath}/change-password">Đổi mật khẩu</a>

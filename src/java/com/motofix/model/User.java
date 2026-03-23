@@ -10,6 +10,7 @@ public class User {
     private String email;
     private String avatarUrl;
     private boolean isActive;
+    private int customerID;
 
     public User() {
     }
@@ -99,4 +100,11 @@ public class User {
     public void setActive(boolean active) {
         isActive = active;
     }
+    public int getCustomerID() {
+    return customerID;
+}
+
+    public void setCustomerID(int customerID) {
+      this.customerID = customerID;
+}
 }

@@ -258,4 +258,133 @@ public class BookingDAO extends DBContext {
         }
         return -1;
     }
+    
+    public List<Booking> listProcessedBookingsByCustomer(int customerId) throws SQLException {
+    List<Booking> bookings = new ArrayList<>();
+    // Câu SQL lọc theo CustomerID và 2 trạng thái CONFIRMED/CANCELLED
+    String sql = """
+        SELECT b.BookingID, CONCAT(a.lastName, ' ', a.firstName) AS FullName, a.Username,
+               v.PlateNumber, b.BookingDate, b.Status, b.Note
+        FROM Bookings b
+        JOIN Customers c ON b.CustomerID = c.CustomerID
+        JOIN Accounts a ON c.AccountID = a.AccountID
+        LEFT JOIN Vehicles v ON v.VehicleID = b.VehicleID
+        WHERE c.CustomerID = ? 
+        ORDER BY b.BookingDate DESC
+    """;
+
+    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+        stmt.setInt(1, customerId);
+        try (ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                bookings.add(new Booking(
+                    rs.getInt("BookingID"),
+                    rs.getString("FullName"),
+                    rs.getString("Username"),
+                    rs.getString("PlateNumber"),
+                    rs.getTimestamp("BookingDate"),
+                    rs.getString("Status"),
+                    rs.getString("Note")
+                ));
+            }
+        }
+    }
+    return bookings;
+}
+
+    public int countBookingsByCustomer(int customerId, String searchValue, String statusFilter) throws SQLException {
+        String sql = """
+            SELECT COUNT(*)
+            FROM Bookings b
+            JOIN Customers c ON b.CustomerID = c.CustomerID
+            LEFT JOIN Vehicles v ON v.VehicleID = b.VehicleID
+            WHERE c.CustomerID = ?
+        """;
+
+        if (statusFilter != null && !statusFilter.trim().isEmpty() && !"ALL".equalsIgnoreCase(statusFilter)) {
+            sql += " AND b.Status = ?";
+        }
+
+        boolean hasSearch = searchValue != null && !searchValue.trim().isEmpty();
+        if (hasSearch) {
+            sql += " AND (CAST(b.BookingID AS NVARCHAR(20)) LIKE ? OR v.PlateNumber LIKE ? OR b.Status LIKE ? OR b.Note LIKE ?)";
+        }
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            int idx = 1;
+            stmt.setInt(idx++, customerId);
+            if (statusFilter != null && !statusFilter.trim().isEmpty() && !"ALL".equalsIgnoreCase(statusFilter)) {
+                stmt.setString(idx++, statusFilter.trim().toUpperCase());
+            }
+            if (hasSearch) {
+                String k = "%" + searchValue.trim() + "%";
+                stmt.setString(idx++, k);
+                stmt.setString(idx++, k);
+                stmt.setString(idx++, k);
+                stmt.setString(idx, k);
+            }
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
+    }
+
+    public List<Booking> listBookingsByCustomerPaged(int customerId, String searchValue, String statusFilter, int offset, int limit) throws SQLException {
+        List<Booking> bookings = new ArrayList<>();
+        String sql = """
+            SELECT b.BookingID, CONCAT(a.lastName, ' ', a.firstName) AS FullName, a.Username,
+                   v.PlateNumber, b.BookingDate, b.Status, b.Note
+            FROM Bookings b
+            JOIN Customers c ON b.CustomerID = c.CustomerID
+            JOIN Accounts a ON c.AccountID = a.AccountID
+            LEFT JOIN Vehicles v ON v.VehicleID = b.VehicleID
+            WHERE c.CustomerID = ?
+        """;
+
+        if (statusFilter != null && !statusFilter.trim().isEmpty() && !"ALL".equalsIgnoreCase(statusFilter)) {
+            sql += " AND b.Status = ?";
+        }
+
+        boolean hasSearch = searchValue != null && !searchValue.trim().isEmpty();
+        if (hasSearch) {
+            sql += " AND (CAST(b.BookingID AS NVARCHAR(20)) LIKE ? OR v.PlateNumber LIKE ? OR b.Status LIKE ? OR b.Note LIKE ?)";
+        }
+
+        sql += " ORDER BY b.BookingDate DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            int idx = 1;
+            stmt.setInt(idx++, customerId);
+            if (statusFilter != null && !statusFilter.trim().isEmpty() && !"ALL".equalsIgnoreCase(statusFilter)) {
+                stmt.setString(idx++, statusFilter.trim().toUpperCase());
+            }
+            if (hasSearch) {
+                String k = "%" + searchValue.trim() + "%";
+                stmt.setString(idx++, k);
+                stmt.setString(idx++, k);
+                stmt.setString(idx++, k);
+                stmt.setString(idx++, k);
+            }
+            stmt.setInt(idx++, offset);
+            stmt.setInt(idx, limit);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    bookings.add(new Booking(
+                            rs.getInt("BookingID"),
+                            rs.getString("FullName"),
+                            rs.getString("Username"),
+                            rs.getString("PlateNumber"),
+                            rs.getTimestamp("BookingDate"),
+                            rs.getString("Status"),
+                            rs.getString("Note")
+                    ));
+                }
+            }
+        }
+        return bookings;
+    }
 }
