@@ -50,12 +50,8 @@
                 <label class="form-label small text-muted mb-1">Trạng thái</label>
                 <select name="status" class="form-select">
                   <option value="" <%= repairSt.isEmpty() || "ALL".equalsIgnoreCase(repairSt) ? "selected" : "" %>>— Tất cả trạng thái —</option>
-                  <option value="RECEIVED" <%= "RECEIVED".equalsIgnoreCase(repairSt) ? "selected" : "" %>>Đã tiếp nhận</option>
                   <option value="IN_PROGRESS" <%= "IN_PROGRESS".equalsIgnoreCase(repairSt) ? "selected" : "" %>>Đang sửa</option>
-                  <option value="TESTING" <%= "TESTING".equalsIgnoreCase(repairSt) ? "selected" : "" %>>Kiểm tra</option>
                   <option value="COMPLETED" <%= "COMPLETED".equalsIgnoreCase(repairSt) ? "selected" : "" %>>Hoàn thành</option>
-                  <option value="REJECTED" <%= "REJECTED".equalsIgnoreCase(repairSt) ? "selected" : "" %>>Đã từ chối</option>
-                  <option value="CANCELLED" <%= "CANCELLED".equalsIgnoreCase(repairSt) ? "selected" : "" %>>Đã từ chối</option>
                 </select>
               </div>
               <div class="col-md-3 col-lg-3">
@@ -80,13 +76,20 @@
                     if (tickets != null && !tickets.isEmpty()) {
                       for (RepairTicket t : tickets) {
                         String status = t.getStatus();
-                        String pill = "status-pill info";
-                        String label = status;
-                        if ("OPEN".equalsIgnoreCase(status) || "RECEIVED".equalsIgnoreCase(status)) { label = "Đã tiếp nhận"; pill = "status-pill info"; }
-                        if ("IN_PROGRESS".equalsIgnoreCase(status)) { label = "Đang sửa"; pill = "status-pill warning"; }
-                        if ("TESTING".equalsIgnoreCase(status)) { label = "Kiểm tra"; pill = "status-pill info"; }
-                        if ("COMPLETED".equalsIgnoreCase(status)) { label = "Hoàn thành"; pill = "status-pill success"; }
-                        if ("REJECTED".equalsIgnoreCase(status) || "CANCELLED".equalsIgnoreCase(status)) { label = "Đã từ chối"; pill = "status-pill danger"; }
+                        String pill = "text-muted";
+                        String label = "-";
+
+                        // Gộp các trạng thái tương ứng vào 2 nhóm hiển thị theo yêu cầu.
+                        if ("IN_PROGRESS".equalsIgnoreCase(status)
+                                || "RECEIVED".equalsIgnoreCase(status)
+                                || "OPEN".equalsIgnoreCase(status)
+                                || "TESTING".equalsIgnoreCase(status)) {
+                          label = "Đang sửa";
+                          pill = "status-pill warning";
+                        } else if ("COMPLETED".equalsIgnoreCase(status) || "DONE".equalsIgnoreCase(status)) {
+                          label = "Hoàn thành";
+                          pill = "status-pill success";
+                        }
                   %>
                   <tr>
                     <td><%= t.getCreatedAt() != null ? fmt.format(t.getCreatedAt()) : "" %></td>

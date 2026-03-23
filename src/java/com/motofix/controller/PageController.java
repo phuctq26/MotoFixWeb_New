@@ -1,14 +1,12 @@
 package com.motofix.controller;
 
 import com.motofix.dao.RepairTicketDAO;
-import com.motofix.dao.BookingDAO;
 import com.motofix.dao.TicketItemDAO;
 import com.motofix.dao.ServiceDAO;
 import com.motofix.dao.UserDAO;
 import com.motofix.dao.InvoiceDAO; 
 import com.motofix.model.Invoice;
 import com.motofix.model.RepairTicket;
-import com.motofix.model.Booking;
 import com.motofix.model.User;
 
 import java.io.IOException;
@@ -30,7 +28,6 @@ public class PageController extends HttpServlet {
     private static final int VEHICLES_PAGE_SIZE = 10;
 
     private final RepairTicketDAO repairTicketDAO = new RepairTicketDAO();
-    private final BookingDAO bookingDAO = new BookingDAO();
     private final TicketItemDAO ticketItemDAO = new TicketItemDAO();
     private final ServiceDAO serviceDAO = new ServiceDAO();
     private final UserDAO userDAO = new UserDAO();
@@ -150,23 +147,7 @@ public class PageController extends HttpServlet {
                     int customerId = userDAO.getCustomerIdByAccountId(user.getUserId());
 
                     List<RepairTicket> allTickets = new ArrayList<>(repairTicketDAO.listByCustomer(customerId));
-                    // Nối booking bị admin từ chối lên cùng trang "Xe & tiến độ"
-                    List<Booking> cancelledBookings = bookingDAO.listCancelledByCustomer(customerId);
-                    if (cancelledBookings != null && !cancelledBookings.isEmpty()) {
-                        for (Booking b : cancelledBookings) {
-                            RepairTicket t = new RepairTicket();
-                            t.setTicketId(b.getBookingId());
-                            t.setTicketCode("BK-" + b.getBookingId());
-                            t.setCustomerName(b.getCustomerName());
-                            t.setPhone(b.getPhone());
-                            t.setPlateNumber(b.getPlateNumber());
-                            t.setStatus(b.getStatus());
-                            t.setCreatedAt(b.getBookingDate());
-                            allTickets.add(t);
-                        }
-                    }
 
-                    // Sort theo thời gian để trộn 2 nguồn (RepairOrders + Bookings bị CANCELLED)
                     allTickets.sort((x, y) -> {
                         if (x.getCreatedAt() == null && y.getCreatedAt() == null) return 0;
                         if (x.getCreatedAt() == null) return 1;
@@ -260,13 +241,37 @@ public class PageController extends HttpServlet {
     private static List<RepairTicket> filterVehiclesTickets(List<RepairTicket> all, String q, String status) {
         String qNorm = normalizeVehiclesQuery(q);
         boolean filterText = !qNorm.isEmpty();
-        boolean filterStatus = !status.isEmpty() && !"ALL".equalsIgnoreCase(status);
         SimpleDateFormat fmt = new SimpleDateFormat("dd/MM/yyyy", Locale.ROOT);
         List<RepairTicket> out = new ArrayList<>();
         for (RepairTicket t : all) {
-            if (filterStatus && !status.equalsIgnoreCase(nullToEmpty(t.getStatus()))) {
+            String tStatus = nullToEmpty(t.getStatus());
+
+            boolean showOnlyTwoGroups = status == null || status.isEmpty() || "ALL".equalsIgnoreCase(status);
+            boolean inProgressGroup = "IN_PROGRESS".equalsIgnoreCase(tStatus)
+                    || "RECEIVED".equalsIgnoreCase(tStatus)
+                    || "OPEN".equalsIgnoreCase(tStatus)
+                    || "TESTING".equalsIgnoreCase(tStatus);
+            boolean completedGroup = "COMPLETED".equalsIgnoreCase(tStatus)
+                    || "DONE".equalsIgnoreCase(tStatus);
+
+            if (showOnlyTwoGroups) {
+                // Luôn chỉ hiển thị: đang sửa hoặc hoàn thành (không hiện các trạng thái bị từ chối).
+                if (!(inProgressGroup || completedGroup)) {
+                    continue;
+                }
+            } else if ("IN_PROGRESS".equalsIgnoreCase(status)) {
+                if (!inProgressGroup) {
+                    continue;
+                }
+            } else if ("COMPLETED".equalsIgnoreCase(status)) {
+                if (!completedGroup) {
+                    continue;
+                }
+            } else {
+                // Trường hợp filter lạ: không hiển thị
                 continue;
             }
+
             if (filterText && !matchesVehiclesSearch(t, qNorm, fmt)) {
                 continue;
             }
