@@ -1,12 +1,14 @@
 package com.motofix.controller;
 
 import com.motofix.dao.RepairTicketDAO;
+import com.motofix.dao.BookingDAO;
 import com.motofix.dao.TicketItemDAO;
 import com.motofix.dao.ServiceDAO;
 import com.motofix.dao.UserDAO;
 import com.motofix.dao.InvoiceDAO; 
 import com.motofix.model.Invoice;
 import com.motofix.model.RepairTicket;
+import com.motofix.model.Booking;
 import com.motofix.model.User;
 
 import java.io.IOException;
@@ -28,6 +30,7 @@ public class PageController extends HttpServlet {
     private static final int VEHICLES_PAGE_SIZE = 10;
 
     private final RepairTicketDAO repairTicketDAO = new RepairTicketDAO();
+    private final BookingDAO bookingDAO = new BookingDAO();
     private final TicketItemDAO ticketItemDAO = new TicketItemDAO();
     private final ServiceDAO serviceDAO = new ServiceDAO();
     private final UserDAO userDAO = new UserDAO();
@@ -146,7 +149,31 @@ public class PageController extends HttpServlet {
                 try {
                     int customerId = userDAO.getCustomerIdByAccountId(user.getUserId());
 
-                    List<RepairTicket> allTickets = repairTicketDAO.listByCustomer(customerId);
+                    List<RepairTicket> allTickets = new ArrayList<>(repairTicketDAO.listByCustomer(customerId));
+                    // Nối booking bị admin từ chối lên cùng trang "Xe & tiến độ"
+                    List<Booking> cancelledBookings = bookingDAO.listCancelledByCustomer(customerId);
+                    if (cancelledBookings != null && !cancelledBookings.isEmpty()) {
+                        for (Booking b : cancelledBookings) {
+                            RepairTicket t = new RepairTicket();
+                            t.setTicketId(b.getBookingId());
+                            t.setTicketCode("BK-" + b.getBookingId());
+                            t.setCustomerName(b.getCustomerName());
+                            t.setPhone(b.getPhone());
+                            t.setPlateNumber(b.getPlateNumber());
+                            t.setStatus(b.getStatus());
+                            t.setCreatedAt(b.getBookingDate());
+                            allTickets.add(t);
+                        }
+                    }
+
+                    // Sort theo thời gian để trộn 2 nguồn (RepairOrders + Bookings bị CANCELLED)
+                    allTickets.sort((x, y) -> {
+                        if (x.getCreatedAt() == null && y.getCreatedAt() == null) return 0;
+                        if (x.getCreatedAt() == null) return 1;
+                        if (y.getCreatedAt() == null) return -1;
+                        return y.getCreatedAt().compareTo(x.getCreatedAt());
+                    });
+
                     applyVehiclesSearchAndPagination(request, allTickets);
 
                 } catch (SQLException e) {

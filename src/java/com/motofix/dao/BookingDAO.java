@@ -147,6 +147,46 @@ public class BookingDAO extends DBContext {
         return bookings;
     }
 
+    /**
+     * Lấy các booking bị từ chối (CANCELLED) theo CustomerID để hiển thị lên trang customer.
+     */
+    public List<Booking> listCancelledByCustomer(int customerId) throws SQLException {
+        List<Booking> bookings = new ArrayList<>();
+        String sql = """
+            SELECT
+                b.BookingID,
+                CONCAT(a.lastName, ' ', a.firstName) AS FullName,
+                a.Username,
+                v.PlateNumber,
+                b.BookingDate,
+                b.Status,
+                b.Note
+            FROM Bookings b
+            JOIN Customers c ON b.CustomerID = c.CustomerID
+            JOIN Accounts a ON c.AccountID = a.AccountID
+            LEFT JOIN Vehicles v ON v.VehicleID = b.VehicleID
+            WHERE b.Status = 'CANCELLED' AND c.CustomerID = ?
+            ORDER BY b.BookingDate DESC
+        """;
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, customerId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    int bookingID = rs.getInt("BookingID");
+                    String fullName = rs.getString("FullName");
+                    String username = rs.getString("Username");
+                    String plateNumber = rs.getString("PlateNumber");
+                    Timestamp bookingDate = rs.getTimestamp("BookingDate");
+                    String status = rs.getString("Status");
+                    String note = rs.getString("Note");
+                    bookings.add(new Booking(bookingID, fullName, username, plateNumber, bookingDate, status, note));
+                }
+            }
+        }
+        return bookings;
+    }
+
     public void updateStatus(int bookingId, String status) throws SQLException {
         String sql = "UPDATE Bookings SET Status = ? WHERE BookingID = ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {

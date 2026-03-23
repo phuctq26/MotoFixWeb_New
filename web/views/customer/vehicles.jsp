@@ -55,7 +55,7 @@
                   <option value="TESTING" <%= "TESTING".equalsIgnoreCase(repairSt) ? "selected" : "" %>>Kiểm tra</option>
                   <option value="COMPLETED" <%= "COMPLETED".equalsIgnoreCase(repairSt) ? "selected" : "" %>>Hoàn thành</option>
                   <option value="REJECTED" <%= "REJECTED".equalsIgnoreCase(repairSt) ? "selected" : "" %>>Đã từ chối</option>
-                  <option value="CANCELLED" <%= "CANCELLED".equalsIgnoreCase(repairSt) ? "selected" : "" %>>Đã hủy</option>
+                  <option value="CANCELLED" <%= "CANCELLED".equalsIgnoreCase(repairSt) ? "selected" : "" %>>Đã từ chối</option>
                 </select>
               </div>
               <div class="col-md-3 col-lg-3">
