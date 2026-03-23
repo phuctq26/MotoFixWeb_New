@@ -56,7 +56,7 @@ public class AdminReceptionController extends HttpServlet {
             return;
         }
         request.setAttribute("customer", customer);
-        List<Vehicle> vehicles = vehicleDAO.listByOwner(customer.getUserId());
+        List<Vehicle> vehicles = vehicleDAO.listByOwner1(customer.getUserId());
         request.setAttribute("vehicles", vehicles);
 
         Integer bookingVehicleId = vehicleDAO.getVehicleFromBooking(customer.getUserId());

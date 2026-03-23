@@ -100,6 +100,43 @@ public class VehicleDAO extends DBContext {
             return null;
         }
     }
+    
+    // Lấy danh sách xe của 1 user theo USerID
+    public List<Vehicle> listByOwner1(int userId) throws SQLException {
+
+        List<Vehicle> vehicles = new ArrayList<>();
+        try {
+            String sql = """
+                            select distinct
+                                v.VehicleID,
+                                c.CustomerID,
+                                v.PlateNumber,
+                                v.Brand,
+                                v.Model
+                            from Vehicles v
+                            join Customers c on v.CustomerID = c.CustomerID
+                            join Accounts a on a.AccountID = c.AccountID
+                            where c.CustomerID = ?
+                         """;
+            st = connection.prepareStatement(sql);
+            st.setInt(1, userId);
+            rs = st.executeQuery();
+            while (rs.next()) {
+
+                int VehicleID = rs.getInt("VehicleID");
+                int CustomerID = rs.getInt("CustomerID");
+                String PlateNumber = rs.getString("PlateNumber");
+                String Brand = rs.getString("Brand");
+                String Model = rs.getString("Model");
+
+                Vehicle acc = new Vehicle(VehicleID, CustomerID, PlateNumber, Brand, Model);
+                vehicles.add(acc);
+            }
+            return vehicles;
+        } catch (Exception e) {
+            return null;
+        }
+    }
 
     public Integer getVehicleFromBooking(int customerId) {
 
